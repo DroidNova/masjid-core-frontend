@@ -60,77 +60,85 @@ class _LoginPageState extends State<LoginPage> {
         return AppScaffold(
           title: 'Login',
           resizeToAvoidBottomInset: true,
-          child: SingleChildScrollView(
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    'Sign in to continue.',
-                    style: Theme.of(context).textTheme.bodyLarge,
-                  ),
-                  const SizedBox(height: 20),
-                  TextFormField(
-                    controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    autofillHints: const [AutofillHints.email],
-                    decoration: const InputDecoration(labelText: 'Email'),
-                    validator: (value) {
-                      final text = value?.trim() ?? '';
-                      if (text.isEmpty) {
-                        return 'Email is required';
-                      }
-                      if (!text.contains('@')) {
-                        return 'Enter a valid email';
-                      }
-                      return null;
-                    },
-                    onChanged: (_) => authController.clearError(),
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _passwordController,
-                    obscureText: true,
-                    autofillHints: const [AutofillHints.password],
-                    decoration: const InputDecoration(labelText: 'Password'),
-                    validator: (value) {
-                      if ((value ?? '').isEmpty) {
-                        return 'Password is required';
-                      }
-                      return null;
-                    },
-                    onChanged: (_) => authController.clearError(),
-                  ),
-                  if (state.errorMessage != null) ...[
-                    const SizedBox(height: 12),
-                    Text(
-                      state.errorMessage!,
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.error,
-                        fontWeight: FontWeight.w500,
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 520),
+              child: SingleChildScrollView(
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        'Sign in to continue.',
+                        style: Theme.of(context).textTheme.bodyLarge,
                       ),
-                    ),
-                  ],
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: state.isSubmitting ? null : _submit,
-                    child: state.isSubmitting
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Text('Login'),
+                      const SizedBox(height: 20),
+                      TextFormField(
+                        controller: _emailController,
+                        keyboardType: TextInputType.emailAddress,
+                        autofillHints: const [AutofillHints.email],
+                        decoration: const InputDecoration(labelText: 'Email'),
+                        validator: (value) {
+                          final text = value?.trim() ?? '';
+                          if (text.isEmpty) {
+                            return 'Email is required';
+                          }
+                          if (!text.contains('@')) {
+                            return 'Enter a valid email';
+                          }
+                          return null;
+                        },
+                        onChanged: (_) => authController.clearError(),
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: _passwordController,
+                        obscureText: true,
+                        autofillHints: const [AutofillHints.password],
+                        decoration: const InputDecoration(labelText: 'Password'),
+                        validator: (value) {
+                          if ((value ?? '').isEmpty) {
+                            return 'Password is required';
+                          }
+                          return null;
+                        },
+                        onChanged: (_) => authController.clearError(),
+                      ),
+                      if (state.errorMessage != null) ...[
+                        const SizedBox(height: 12),
+                        Text(
+                          state.errorMessage!,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.error,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 20),
+                      ElevatedButton(
+                        onPressed: state.isSubmitting ? null : _submit,
+                        child: state.isSubmitting
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Text('Login'),
+                      ),
+                      const SizedBox(height: 8),
+                      TextButton(
+                        onPressed: state.isSubmitting
+                            ? null
+                            : () => Navigator.pushNamed(
+                                context,
+                                AppRoutes.register,
+                              ),
+                        child: const Text('Create an account'),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 8),
-                  TextButton(
-                    onPressed: state.isSubmitting
-                        ? null
-                        : () => Navigator.pushNamed(context, AppRoutes.register),
-                    child: const Text('Create an account'),
-                  ),
-                ],
+                ),
               ),
             ),
           ),

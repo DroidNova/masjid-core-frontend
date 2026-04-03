@@ -15,6 +15,7 @@ class AuthRemoteDataSource {
       ApiEndpoints.authRegister,
       data: payload,
       parser: AuthTokensModel.fromResponse,
+      requiresAuth: false,
     );
   }
 
@@ -23,6 +24,7 @@ class AuthRemoteDataSource {
       ApiEndpoints.authLogin,
       data: payload,
       parser: AuthTokensModel.fromResponse,
+      requiresAuth: false,
     );
   }
 
@@ -33,6 +35,7 @@ class AuthRemoteDataSource {
       ApiEndpoints.authRefresh,
       data: {'refreshToken': refreshToken},
       parser: AuthTokensModel.fromResponse,
+      requiresAuth: false,
     );
   }
 

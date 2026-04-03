@@ -13,18 +13,21 @@ class AuthState {
     this.user,
     this.errorMessage,
     this.isSubmitting = false,
+    this.isLoggingOut = false,
   });
 
   const AuthState.initial()
       : status = AuthStatus.initial,
         user = null,
         errorMessage = null,
-        isSubmitting = false;
+        isSubmitting = false,
+        isLoggingOut = false;
 
   final AuthStatus status;
   final CurrentUser? user;
   final String? errorMessage;
   final bool isSubmitting;
+  final bool isLoggingOut;
 
   bool get isAuthenticated => status == AuthStatus.authenticated;
 
@@ -35,12 +38,14 @@ class AuthState {
     String? errorMessage,
     bool clearError = false,
     bool? isSubmitting,
+    bool? isLoggingOut,
   }) {
     return AuthState(
       status: status ?? this.status,
       user: clearUser ? null : (user ?? this.user),
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
       isSubmitting: isSubmitting ?? this.isSubmitting,
+      isLoggingOut: isLoggingOut ?? this.isLoggingOut,
     );
   }
 }

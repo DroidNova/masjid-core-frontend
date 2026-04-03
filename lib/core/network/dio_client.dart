@@ -1,8 +1,11 @@
 import 'package:dio/dio.dart';
 import 'package:platform_core_frontend/core/config/app_config.dart';
+import 'package:platform_core_frontend/core/constants/api_endpoints.dart';
 import 'package:platform_core_frontend/core/errors/app_exception.dart';
 import 'package:platform_core_frontend/core/network/api_result.dart';
+import 'package:platform_core_frontend/core/network/interceptors/auth_interceptor.dart';
 import 'package:platform_core_frontend/core/storage/token_storage.dart';
+import 'package:platform_core_frontend/features/auth/data/models/auth_tokens_model.dart';
 import 'package:platform_core_frontend/shared/types/json_types.dart';
 
 class DioClient {
@@ -18,30 +21,44 @@ class DioClient {
               'Content-Type': 'application/json',
             },
           ),
+        ),
+        _refreshDio = Dio(
+          BaseOptions(
+            baseUrl: config.apiBaseUrl,
+            connectTimeout: config.requestTimeout,
+            receiveTimeout: config.requestTimeout,
+            headers: const {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json',
+            },
+          ),
         ) {
     _dio.interceptors.add(
-      InterceptorsWrapper(
-        onRequest: (options, handler) async {
-          final token = await _tokenStorage.getAccessToken();
-          if (token != null && token.isNotEmpty) {
-            options.headers['Authorization'] = 'Bearer $token';
-          }
-          handler.next(options);
-        },
+      AuthInterceptor(
+        dio: _dio,
+        tokenStorage: _tokenStorage,
+        refreshTokens: _refreshTokens,
+        clearSession: _tokenStorage.clearTokens,
       ),
     );
   }
 
   final Dio _dio;
+  final Dio _refreshDio;
   final TokenStorage _tokenStorage;
 
   Future<ApiResult<T>> get<T>(
     String path, {
     JsonMap? queryParameters,
     T Function(dynamic json)? parser,
+    bool requiresAuth = true,
   }) {
     return _request<T>(
-      () => _dio.get<dynamic>(path, queryParameters: queryParameters),
+      () => _dio.get<dynamic>(
+        path,
+        queryParameters: queryParameters,
+        options: Options(extra: {'requiresAuth': requiresAuth}),
+      ),
       parser,
     );
   }
@@ -51,12 +68,14 @@ class DioClient {
     Object? data,
     JsonMap? queryParameters,
     T Function(dynamic json)? parser,
+    bool requiresAuth = true,
   }) {
     return _request<T>(
       () => _dio.post<dynamic>(
         path,
         data: data,
         queryParameters: queryParameters,
+        options: Options(extra: {'requiresAuth': requiresAuth}),
       ),
       parser,
     );
@@ -79,6 +98,30 @@ class DioClient {
       return ApiFailure<T>(_mapDioException(error));
     } catch (_) {
       return ApiFailure<T>(const UnknownException());
+    }
+  }
+
+  Future<bool> _refreshTokens() async {
+    final refreshToken = await _tokenStorage.getRefreshToken();
+    if (refreshToken == null || refreshToken.isEmpty) {
+      return false;
+    }
+
+    try {
+      final response = await _refreshDio.post<dynamic>(
+        ApiEndpoints.authRefresh,
+        data: {'refreshToken': refreshToken},
+      );
+      final tokens = AuthTokensModel.fromResponse(response.data);
+      if (tokens.accessToken.isEmpty || tokens.refreshToken.isEmpty) {
+        return false;
+      }
+
+      await _tokenStorage.saveAccessToken(tokens.accessToken);
+      await _tokenStorage.saveRefreshToken(tokens.refreshToken);
+      return true;
+    } catch (_) {
+      return false;
     }
   }
 
