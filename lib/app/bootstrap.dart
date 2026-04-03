@@ -7,6 +7,7 @@ import 'package:platform_core_frontend/core/storage/token_storage.dart';
 import 'package:platform_core_frontend/features/auth/data/datasources/auth_remote_datasource.dart';
 import 'package:platform_core_frontend/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:platform_core_frontend/features/auth/domain/repositories/auth_repository.dart';
+import 'package:platform_core_frontend/features/auth/presentation/controllers/auth_controller.dart';
 
 class AppServices {
   AppServices({
@@ -14,12 +15,14 @@ class AppServices {
     required this.tokenStorage,
     required this.dioClient,
     required this.authRepository,
+    required this.authController,
   });
 
   final AppConfig config;
   final TokenStorage tokenStorage;
   final DioClient dioClient;
   final AuthRepository authRepository;
+  final AuthController authController;
 }
 
 Future<void> bootstrap(FutureOr<Widget> Function() builder) async {
@@ -40,11 +43,16 @@ AppServices bootstrapServices(AppConfig config) {
     remoteDataSource: authRemoteDataSource,
     tokenStorage: tokenStorage,
   );
+  final authController = AuthController(
+    authRepository: authRepository,
+    tokenStorage: tokenStorage,
+  );
 
   return AppServices(
     config: config,
     tokenStorage: tokenStorage,
     dioClient: dioClient,
     authRepository: authRepository,
+    authController: authController,
   );
 }

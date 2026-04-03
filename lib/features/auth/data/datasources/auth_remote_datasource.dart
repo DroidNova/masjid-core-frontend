@@ -14,7 +14,7 @@ class AuthRemoteDataSource {
     return _dioClient.post<AuthTokensModel>(
       ApiEndpoints.authRegister,
       data: payload,
-      parser: (json) => AuthTokensModel.fromJson(json as JsonMap),
+      parser: AuthTokensModel.fromResponse,
     );
   }
 
@@ -22,7 +22,7 @@ class AuthRemoteDataSource {
     return _dioClient.post<AuthTokensModel>(
       ApiEndpoints.authLogin,
       data: payload,
-      parser: (json) => AuthTokensModel.fromJson(json as JsonMap),
+      parser: AuthTokensModel.fromResponse,
     );
   }
 
@@ -32,7 +32,7 @@ class AuthRemoteDataSource {
     return _dioClient.post<AuthTokensModel>(
       ApiEndpoints.authRefresh,
       data: {'refreshToken': refreshToken},
-      parser: (json) => AuthTokensModel.fromJson(json as JsonMap),
+      parser: AuthTokensModel.fromResponse,
     );
   }
 
@@ -46,7 +46,7 @@ class AuthRemoteDataSource {
   Future<ApiResult<CurrentUserModel>> getCurrentUser() {
     return _dioClient.get<CurrentUserModel>(
       ApiEndpoints.authMe,
-      parser: (json) => CurrentUserModel.fromJson(json as JsonMap),
+      parser: CurrentUserModel.fromResponse,
     );
   }
 }

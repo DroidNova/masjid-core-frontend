@@ -17,6 +17,16 @@ class AuthTokensModel extends AuthTokens {
     );
   }
 
+  factory AuthTokensModel.fromResponse(dynamic raw) {
+    if (raw is JsonMap) {
+      if (raw['data'] is JsonMap) {
+        return AuthTokensModel.fromJson(raw['data'] as JsonMap);
+      }
+      return AuthTokensModel.fromJson(raw);
+    }
+    return const AuthTokensModel(accessToken: '', refreshToken: '');
+  }
+
   JsonMap toJson() {
     return {
       'accessToken': accessToken,

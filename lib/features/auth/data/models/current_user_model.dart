@@ -26,6 +26,21 @@ class CurrentUserModel extends CurrentUser {
     );
   }
 
+  factory CurrentUserModel.fromResponse(dynamic raw) {
+    if (raw is JsonMap) {
+      if (raw['data'] is JsonMap) {
+        return CurrentUserModel.fromJson(raw['data'] as JsonMap);
+      }
+      return CurrentUserModel.fromJson(raw);
+    }
+    return const CurrentUserModel(
+      id: '',
+      email: '',
+      roles: <String>[],
+      permissions: <String>[],
+    );
+  }
+
   JsonMap toJson() {
     return {
       'id': id,

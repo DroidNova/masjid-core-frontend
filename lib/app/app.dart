@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:platform_core_frontend/app/bootstrap.dart';
 import 'package:platform_core_frontend/core/routing/app_router.dart';
 import 'package:platform_core_frontend/core/theme/app_theme.dart';
+import 'package:platform_core_frontend/features/auth/presentation/auth_scope.dart';
 
 class App extends StatelessWidget {
   const App({
@@ -13,12 +14,17 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: services.config.appName,
-      theme: AppTheme.light(),
-      initialRoute: AppRoutes.root,
-      onGenerateRoute: AppRouter.onGenerateRoute,
+    final appRouter = AppRouter(services.authController);
+
+    return AuthScope(
+      controller: services.authController,
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: services.config.appName,
+        theme: AppTheme.light(),
+        initialRoute: AppRoutes.root,
+        onGenerateRoute: appRouter.onGenerateRoute,
+      ),
     );
   }
 }
