@@ -1,3 +1,4 @@
+import 'package:platform_core_frontend/core/network/response_mapper.dart';
 import 'package:platform_core_frontend/features/admin/domain/entities/admin_user_detail.dart';
 import 'package:platform_core_frontend/shared/types/json_types.dart';
 
@@ -33,19 +34,7 @@ class AdminUserDetailModel extends AdminUserDetail {
   }
 
   factory AdminUserDetailModel.fromResponse(dynamic raw) {
-    if (raw is JsonMap) {
-      if (raw['data'] is JsonMap) {
-        return AdminUserDetailModel.fromJson(raw['data'] as JsonMap);
-      }
-      return AdminUserDetailModel.fromJson(raw);
-    }
-
-    return const AdminUserDetailModel(
-      id: '',
-      email: '',
-      status: 'UNKNOWN',
-      roles: <String>[],
-      permissions: <String>[],
-    );
+    final json = ResponseMapper.unwrapDataMap(raw);
+    return AdminUserDetailModel.fromJson(json);
   }
 }

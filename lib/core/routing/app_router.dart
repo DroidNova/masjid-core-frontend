@@ -9,6 +9,13 @@ import 'package:platform_core_frontend/features/auth/presentation/pages/splash_p
 import 'package:platform_core_frontend/features/profile/presentation/pages/home_page.dart';
 import 'package:platform_core_frontend/features/profile/presentation/pages/profile_page.dart';
 
+class AppRouteGroup {
+  const AppRouteGroup._();
+
+  static const String auth = '/';
+  static const String admin = '/admin';
+}
+
 class AppRoutes {
   const AppRoutes._();
 
@@ -17,9 +24,10 @@ class AppRoutes {
   static const String register = '/register';
   static const String home = '/home';
   static const String profile = '/profile';
-  static const String adminUsers = '/admin/users';
 
-  static String adminUserDetail(String id) => '/admin/users/$id';
+  static const String adminUsers = '${AppRouteGroup.admin}/users';
+
+  static String adminUserDetail(String id) => '$adminUsers/$id';
 }
 
 class AppRouter {

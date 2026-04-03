@@ -1,11 +1,12 @@
 import 'package:platform_core_frontend/core/network/api_result.dart';
 import 'package:platform_core_frontend/features/admin/domain/entities/admin_user_detail.dart';
-import 'package:platform_core_frontend/features/admin/domain/entities/admin_users_page_result.dart';
+import 'package:platform_core_frontend/features/admin/domain/entities/admin_user_summary.dart';
+import 'package:platform_core_frontend/shared/models/paginated_data.dart';
+import 'package:platform_core_frontend/shared/types/list_query_params.dart';
 
 abstract class AdminRepository {
-  Future<ApiResult<AdminUsersPageResult>> getUsers({
-    int page = 1,
-    int limit = 20,
+  Future<ApiResult<PaginatedData<AdminUserSummary>>> getUsers({
+    ListQueryParams query = const ListQueryParams(),
   });
 
   Future<ApiResult<AdminUserDetail>> getUserById(String id);

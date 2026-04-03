@@ -1,25 +1,28 @@
 import 'package:platform_core_frontend/core/constants/api_endpoints.dart';
 import 'package:platform_core_frontend/core/network/api_result.dart';
 import 'package:platform_core_frontend/core/network/dio_client.dart';
+import 'package:platform_core_frontend/core/network/list_response_mapper.dart';
 import 'package:platform_core_frontend/features/admin/data/models/admin_user_detail_model.dart';
-import 'package:platform_core_frontend/features/admin/data/models/admin_users_page_result_model.dart';
+import 'package:platform_core_frontend/features/admin/data/models/admin_user_summary_model.dart';
+import 'package:platform_core_frontend/shared/models/paginated_data.dart';
+import 'package:platform_core_frontend/shared/types/list_query_params.dart';
 
 class AdminRemoteDataSource {
   AdminRemoteDataSource(this._dioClient);
 
   final DioClient _dioClient;
 
-  Future<ApiResult<AdminUsersPageResultModel>> getUsers({
-    int page = 1,
-    int limit = 20,
+  Future<ApiResult<PaginatedData<AdminUserSummaryModel>>> getUsers({
+    ListQueryParams query = const ListQueryParams(),
   }) {
-    return _dioClient.get<AdminUsersPageResultModel>(
+    return _dioClient.get<PaginatedData<AdminUserSummaryModel>>(
       ApiEndpoints.adminUsers,
-      queryParameters: {
-        'page': page,
-        'limit': limit,
-      },
-      parser: AdminUsersPageResultModel.fromResponse,
+      queryParameters: query.toQueryMap(),
+      parser: (raw) => ListResponseMapper.map<AdminUserSummaryModel>(
+        raw,
+        itemParser: AdminUserSummaryModel.fromJson,
+        defaultLimit: query.limit,
+      ),
     );
   }
 

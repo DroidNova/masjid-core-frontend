@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:platform_core_frontend/core/auth/access_policy.dart';
 import 'package:platform_core_frontend/core/errors/app_exception.dart';
 import 'package:platform_core_frontend/core/network/api_result.dart';
 import 'package:platform_core_frontend/core/storage/token_storage.dart';
@@ -20,15 +21,9 @@ class AuthController extends ChangeNotifier {
   AuthState _state = const AuthState.initial();
   AuthState get state => _state;
 
-  bool get canAccessAdmin {
-    final roles = _state.user?.roles.map((e) => e.toUpperCase()).toSet() ?? {};
-    final permissions =
-        _state.user?.permissions.map((e) => e.toLowerCase()).toSet() ?? {};
+  bool get canAccessAdmin => AccessPolicy.canViewAdmin(_state.user);
 
-    return roles.contains('SUPER_ADMIN') ||
-        roles.contains('ADMIN') ||
-        permissions.any((permission) => permission.contains('admin'));
-  }
+  bool get canViewSettings => AccessPolicy.canViewSettings(_state.user);
 
   Future<void> restoreSession() async {
     if (_state.status == AuthStatus.checking) {

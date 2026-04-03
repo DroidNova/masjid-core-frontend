@@ -1,9 +1,11 @@
 import 'package:flutter/foundation.dart';
 import 'package:platform_core_frontend/core/errors/app_exception.dart';
 import 'package:platform_core_frontend/core/network/api_result.dart';
-import 'package:platform_core_frontend/features/admin/domain/entities/admin_users_page_result.dart';
+import 'package:platform_core_frontend/features/admin/domain/entities/admin_user_summary.dart';
 import 'package:platform_core_frontend/features/admin/domain/repositories/admin_repository.dart';
 import 'package:platform_core_frontend/features/admin/presentation/state/admin_users_state.dart';
+import 'package:platform_core_frontend/shared/models/paginated_data.dart';
+import 'package:platform_core_frontend/shared/types/list_query_params.dart';
 
 class AdminUsersController extends ChangeNotifier {
   AdminUsersController(this._repository);
@@ -13,28 +15,29 @@ class AdminUsersController extends ChangeNotifier {
   AdminUsersState _state = const AdminUsersState();
   AdminUsersState get state => _state;
 
-  Future<void> loadUsers({int page = 1, int limit = 20}) async {
+  Future<void> loadUsers({ListQueryParams? query}) async {
+    final nextQuery = query ?? _state.query;
+
     _setState(
       _state.copyWith(
         isLoading: true,
+        query: nextQuery,
         clearError: true,
       ),
     );
 
-    final result = await _repository.getUsers(page: page, limit: limit);
+    final result = await _repository.getUsers(query: nextQuery);
     switch (result) {
-      case ApiSuccess<AdminUsersPageResult>(:final data):
+      case ApiSuccess<PaginatedData<AdminUserSummary>>(:final data):
         _setState(
           _state.copyWith(
-            users: data.users,
-            page: data.page,
-            limit: data.limit,
-            total: data.total,
+            users: data.items,
+            meta: data.meta,
             isLoading: false,
             clearError: true,
           ),
         );
-      case ApiFailure<AdminUsersPageResult>(:final exception):
+      case ApiFailure<PaginatedData<AdminUserSummary>>(:final exception):
         _setState(
           _state.copyWith(
             isLoading: false,
@@ -43,6 +46,21 @@ class AdminUsersController extends ChangeNotifier {
         );
     }
   }
+
+  Future<void> search(String value) {
+    return loadUsers(
+      query: _state.query.copyWith(
+        page: 1,
+        search: value.trim().isEmpty ? null : value.trim(),
+      ),
+    );
+  }
+
+  Future<void> goToPage(int page) {
+    return loadUsers(query: _state.query.copyWith(page: page));
+  }
+
+  Future<void> retry() => loadUsers(query: _state.query);
 
   String _toUserMessage(AppException exception) {
     if (exception is UnauthorizedException) {
