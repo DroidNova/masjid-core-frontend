@@ -16,7 +16,7 @@ class AppConfig {
   static const AppConfig platformCoreDev = AppConfig(
     appName: 'Platform Core',
     productKey: 'platform-core',
-    apiBaseUrl: 'http://localhost:8080',
+    apiBaseUrl: 'http://localhost:3000/api/v1',
     environment: 'dev',
     requestTimeout: Duration(seconds: 30),
   );
