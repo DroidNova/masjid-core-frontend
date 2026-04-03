@@ -28,11 +28,25 @@ class ProtectedAppShell extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = AuthScope.of(context);
     final userEmail = controller.state.user?.email ?? 'Authenticated user';
+    final canAccessAdmin = controller.canAccessAdmin;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(title),
         actions: [
+          TextButton(
+            onPressed: () => Navigator.pushNamed(context, AppRoutes.home),
+            child: const Text('Home'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pushNamed(context, AppRoutes.profile),
+            child: const Text('Profile'),
+          ),
+          if (canAccessAdmin)
+            TextButton(
+              onPressed: () => Navigator.pushNamed(context, AppRoutes.adminUsers),
+              child: const Text('Admin'),
+            ),
           if (actions != null) ...actions!,
           PopupMenuButton<String>(
             tooltip: 'Session options',

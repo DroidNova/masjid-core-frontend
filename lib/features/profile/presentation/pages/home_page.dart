@@ -10,6 +10,7 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final authController = AuthScope.of(context);
     final user = authController.state.user;
+    final canAccessAdmin = authController.canAccessAdmin;
 
     return ProtectedAppShell(
       title: 'Platform Home',
@@ -37,16 +38,12 @@ class HomePage extends StatelessWidget {
                     onPressed: () => Navigator.pushNamed(context, AppRoutes.profile),
                     child: const Text('Profile'),
                   ),
-                  OutlinedButton(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Admin module placeholder (coming next).'),
-                        ),
-                      );
-                    },
-                    child: const Text('Admin (Placeholder)'),
-                  ),
+                  if (canAccessAdmin)
+                    OutlinedButton(
+                      onPressed: () =>
+                          Navigator.pushNamed(context, AppRoutes.adminUsers),
+                      child: const Text('Admin Users'),
+                    ),
                   OutlinedButton(
                     onPressed: () {
                       ScaffoldMessenger.of(context).showSnackBar(

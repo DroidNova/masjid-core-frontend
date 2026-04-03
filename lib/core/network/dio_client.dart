@@ -81,6 +81,24 @@ class DioClient {
     );
   }
 
+  Future<ApiResult<T>> patch<T>(
+    String path, {
+    Object? data,
+    JsonMap? queryParameters,
+    T Function(dynamic json)? parser,
+    bool requiresAuth = true,
+  }) {
+    return _request<T>(
+      () => _dio.patch<dynamic>(
+        path,
+        data: data,
+        queryParameters: queryParameters,
+        options: Options(extra: {'requiresAuth': requiresAuth}),
+      ),
+      parser,
+    );
+  }
+
   Future<ApiResult<T>> _request<T>(
     Future<Response<dynamic>> Function() call,
     T Function(dynamic json)? parser,

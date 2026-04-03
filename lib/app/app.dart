@@ -14,7 +14,10 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final appRouter = AppRouter(services.authController);
+    final appRouter = AppRouter(
+      authController: services.authController,
+      adminRepository: services.adminRepository,
+    );
 
     return AuthScope(
       controller: services.authController,

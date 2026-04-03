@@ -20,6 +20,16 @@ class AuthController extends ChangeNotifier {
   AuthState _state = const AuthState.initial();
   AuthState get state => _state;
 
+  bool get canAccessAdmin {
+    final roles = _state.user?.roles.map((e) => e.toUpperCase()).toSet() ?? {};
+    final permissions =
+        _state.user?.permissions.map((e) => e.toLowerCase()).toSet() ?? {};
+
+    return roles.contains('SUPER_ADMIN') ||
+        roles.contains('ADMIN') ||
+        permissions.any((permission) => permission.contains('admin'));
+  }
+
   Future<void> restoreSession() async {
     if (_state.status == AuthStatus.checking) {
       return;
