@@ -78,7 +78,7 @@ class DioClient {
     } on DioException catch (error) {
       return ApiFailure<T>(_mapDioException(error));
     } catch (_) {
-      return const ApiFailure<T>(UnknownException());
+      return ApiFailure<T>(const UnknownException());
     }
   }
 
