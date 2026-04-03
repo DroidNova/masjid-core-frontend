@@ -25,6 +25,7 @@ class CurrentUserModel {
             const <String>[];
 
     return CurrentUserModel(
+      // TODO(BACKEND): confirm canonical identifier key for this payload.
       id: (json['id'] ?? json['userId'] ?? '').toString(),
       email: (json['email'] ?? '').toString(),
       displayName: (json['name'] ?? json['displayName'])?.toString(),

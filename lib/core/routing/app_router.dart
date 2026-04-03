@@ -12,7 +12,6 @@ import 'package:platform_core_frontend/features/profile/presentation/pages/profi
 class AppRouteGroup {
   const AppRouteGroup._();
 
-  static const String auth = '/';
   static const String admin = '/admin';
 }
 

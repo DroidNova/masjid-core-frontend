@@ -25,6 +25,8 @@ class AuthController extends ChangeNotifier {
 
   bool get canViewSettings => AccessPolicy.canViewSettings(_state.user);
 
+  bool get canManageUsers => AccessPolicy.canManageUsers(_state.user);
+
   Future<void> restoreSession() async {
     if (_state.status == AuthStatus.checking) {
       return;

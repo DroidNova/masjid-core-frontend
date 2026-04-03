@@ -46,7 +46,7 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
   Widget build(BuildContext context) {
     final authController = AuthScope.of(context);
 
-    if (!authController.canAccessAdmin) {
+    if (!authController.canManageUsers) {
       return const ProtectedAppShell(
         title: 'Admin Users',
         child: UnauthorizedView(),

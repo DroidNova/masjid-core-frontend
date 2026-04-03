@@ -12,6 +12,7 @@ class ListResponseMapper {
     int defaultLimit = 20,
   }) {
     final payload = ResponseMapper.unwrapDataMap(raw);
+    // TODO(BACKEND): confirm final list envelope keys for each endpoint.
     final itemsRaw = payload['items'] ?? payload['users'] ?? payload['data'] ?? const [];
 
     final itemMaps = (itemsRaw as List?)?.whereType<JsonMap>().toList() ??

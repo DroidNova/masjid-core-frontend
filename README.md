@@ -9,6 +9,11 @@ This repository is the **generic platform-layer frontend** (Android, iOS, Web) t
 
 ---
 
+
+## Clone Intent
+
+> This project is intended to be cloned and extended (not rewritten in-place) for domain and client layers.
+
 ## Current Scope
 
 ### In scope now

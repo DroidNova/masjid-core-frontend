@@ -25,14 +25,14 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
   late final AdminUserDetailController _controller;
 
   static const List<String> _statusOptions = <String>[
-    // TODO: load from backend metadata once available.
+    // TODO(BACKEND): load allowed status values from metadata endpoint once available.
     'ACTIVE',
     'SUSPENDED',
     'DISABLED',
   ];
 
   static const List<String> _roleOptions = <String>[
-    // TODO: replace with backend-driven role list endpoint when available.
+    // TODO(BACKEND): replace temporary role options with API-driven role catalog.
     'SUPER_ADMIN',
     'ADMIN',
     'USER',
@@ -154,7 +154,7 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
   @override
   Widget build(BuildContext context) {
     final authController = AuthScope.of(context);
-    if (!authController.canAccessAdmin) {
+    if (!authController.canManageUsers) {
       return const ProtectedAppShell(
         title: 'User Detail',
         child: UnauthorizedView(),

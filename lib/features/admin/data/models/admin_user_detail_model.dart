@@ -31,6 +31,7 @@ class AdminUserDetailModel {
             const <String>[];
 
     return AdminUserDetailModel(
+      // TODO(BACKEND): confirm canonical identifier key for this payload.
       id: (json['id'] ?? json['userId'] ?? '').toString(),
       email: (json['email'] ?? '').toString(),
       name: (json['name'] ?? json['displayName'])?.toString(),
