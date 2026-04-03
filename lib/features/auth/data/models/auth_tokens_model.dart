@@ -2,11 +2,14 @@ import 'package:platform_core_frontend/core/network/response_mapper.dart';
 import 'package:platform_core_frontend/features/auth/domain/entities/auth_tokens.dart';
 import 'package:platform_core_frontend/shared/types/json_types.dart';
 
-class AuthTokensModel extends AuthTokens {
+class AuthTokensModel {
   const AuthTokensModel({
-    required super.accessToken,
-    required super.refreshToken,
+    required this.accessToken,
+    required this.refreshToken,
   });
+
+  final String accessToken;
+  final String refreshToken;
 
   factory AuthTokensModel.fromJson(JsonMap json) {
     final accessToken = json['accessToken'] ?? json['access_token'] ?? '';
@@ -21,6 +24,13 @@ class AuthTokensModel extends AuthTokens {
   factory AuthTokensModel.fromResponse(dynamic raw) {
     final json = ResponseMapper.unwrapDataMap(raw);
     return AuthTokensModel.fromJson(json);
+  }
+
+  AuthTokens toEntity() {
+    return AuthTokens(
+      accessToken: accessToken,
+      refreshToken: refreshToken,
+    );
   }
 
   JsonMap toJson() {

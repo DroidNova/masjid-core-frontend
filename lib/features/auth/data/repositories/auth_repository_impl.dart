@@ -1,7 +1,8 @@
+import 'package:platform_core_frontend/core/errors/app_exception.dart';
 import 'package:platform_core_frontend/core/network/api_result.dart';
 import 'package:platform_core_frontend/core/storage/token_storage.dart';
-import 'package:platform_core_frontend/core/errors/app_exception.dart';
 import 'package:platform_core_frontend/features/auth/data/datasources/auth_remote_datasource.dart';
+import 'package:platform_core_frontend/features/auth/data/models/auth_tokens_model.dart';
 import 'package:platform_core_frontend/features/auth/domain/entities/auth_tokens.dart';
 import 'package:platform_core_frontend/features/auth/domain/entities/current_user.dart';
 import 'package:platform_core_frontend/features/auth/domain/repositories/auth_repository.dart';
@@ -50,14 +51,17 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<ApiResult<CurrentUser>> getCurrentUser() {
-    return _remoteDataSource.getCurrentUser();
+  Future<ApiResult<CurrentUser>> getCurrentUser() async {
+    final result = await _remoteDataSource.getCurrentUser();
+    return result.mapData((model) => model.toEntity());
   }
 
   Future<ApiResult<AuthTokens>> _persistTokens(
-    ApiResult<AuthTokens> result,
+    ApiResult<AuthTokensModel> result,
   ) async {
-    switch (result) {
+    final entityResult = result.mapData((model) => model.toEntity());
+
+    switch (entityResult) {
       case ApiSuccess<AuthTokens>(:final data):
         await _tokenStorage.saveAccessToken(data.accessToken);
         await _tokenStorage.saveRefreshToken(data.refreshToken);

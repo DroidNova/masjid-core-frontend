@@ -18,3 +18,22 @@ class ApiFailure<T> extends ApiResult<T> {
 
   final AppException exception;
 }
+
+extension ApiResultX<T> on ApiResult<T> {
+  R fold<R>({
+    required R Function(T data) onSuccess,
+    required R Function(AppException exception) onFailure,
+  }) {
+    return switch (this) {
+      ApiSuccess<T>(:final data) => onSuccess(data),
+      ApiFailure<T>(:final exception) => onFailure(exception),
+    };
+  }
+
+  ApiResult<R> mapData<R>(R Function(T data) mapper) {
+    return switch (this) {
+      ApiSuccess<T>(:final data) => ApiSuccess<R>(mapper(data)),
+      ApiFailure<T>(:final exception) => ApiFailure<R>(exception),
+    };
+  }
+}

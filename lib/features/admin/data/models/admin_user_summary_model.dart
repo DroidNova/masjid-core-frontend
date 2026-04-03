@@ -1,14 +1,20 @@
 import 'package:platform_core_frontend/features/admin/domain/entities/admin_user_summary.dart';
 import 'package:platform_core_frontend/shared/types/json_types.dart';
 
-class AdminUserSummaryModel extends AdminUserSummary {
+class AdminUserSummaryModel {
   const AdminUserSummaryModel({
-    required super.id,
-    required super.email,
-    required super.status,
-    required super.roles,
-    super.name,
+    required this.id,
+    required this.email,
+    required this.status,
+    required this.roles,
+    this.name,
   });
+
+  final String id;
+  final String email;
+  final String status;
+  final List<String> roles;
+  final String? name;
 
   factory AdminUserSummaryModel.fromJson(JsonMap json) {
     final roles = (json['roles'] as List?)?.map((e) => e.toString()).toList() ??
@@ -20,6 +26,16 @@ class AdminUserSummaryModel extends AdminUserSummary {
       name: (json['name'] ?? json['displayName'])?.toString(),
       status: (json['status'] ?? 'UNKNOWN').toString(),
       roles: roles,
+    );
+  }
+
+  AdminUserSummary toEntity() {
+    return AdminUserSummary(
+      id: id,
+      email: email,
+      status: status,
+      roles: List<String>.from(roles),
+      name: name,
     );
   }
 }

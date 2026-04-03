@@ -2,14 +2,20 @@ import 'package:platform_core_frontend/core/network/response_mapper.dart';
 import 'package:platform_core_frontend/features/auth/domain/entities/current_user.dart';
 import 'package:platform_core_frontend/shared/types/json_types.dart';
 
-class CurrentUserModel extends CurrentUser {
+class CurrentUserModel {
   const CurrentUserModel({
-    required super.id,
-    required super.email,
-    required super.roles,
-    required super.permissions,
-    super.displayName,
+    required this.id,
+    required this.email,
+    required this.roles,
+    required this.permissions,
+    this.displayName,
   });
+
+  final String id;
+  final String email;
+  final String? displayName;
+  final List<String> roles;
+  final List<String> permissions;
 
   factory CurrentUserModel.fromJson(JsonMap json) {
     final roles = (json['roles'] as List?)?.map((e) => e.toString()).toList() ??
@@ -30,6 +36,16 @@ class CurrentUserModel extends CurrentUser {
   factory CurrentUserModel.fromResponse(dynamic raw) {
     final json = ResponseMapper.unwrapDataMap(raw);
     return CurrentUserModel.fromJson(json);
+  }
+
+  CurrentUser toEntity() {
+    return CurrentUser(
+      id: id,
+      email: email,
+      displayName: displayName,
+      roles: List<String>.from(roles),
+      permissions: List<String>.from(permissions),
+    );
   }
 
   JsonMap toJson() {
