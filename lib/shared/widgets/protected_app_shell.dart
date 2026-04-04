@@ -27,7 +27,10 @@ class ProtectedAppShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = AuthScope.of(context);
-    final userEmail = controller.state.user?.email ?? 'Authenticated user';
+    final user = controller.state.user;
+    final sessionLabel = user?.displayName?.trim().isNotEmpty == true
+        ? user!.displayName!
+        : user?.email ?? 'Authenticated user';
     final canAccessAdmin = controller.canAccessAdmin;
 
     return Scaffold(
@@ -65,7 +68,7 @@ class ProtectedAppShell extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: Center(
                 child: Text(
-                  userEmail,
+                  sessionLabel,
                   style: Theme.of(context).textTheme.labelMedium,
                 ),
               ),
