@@ -13,7 +13,7 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
+  final _emailOrPhoneController = TextEditingController();
   final _passwordController = TextEditingController();
 
   AuthController? _authController;
@@ -26,7 +26,7 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _emailOrPhoneController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -37,7 +37,7 @@ class _LoginPageState extends State<LoginPage> {
     }
 
     final success = await _authController!.login(
-      email: _emailController.text,
+      emailOrPhone: _emailOrPhoneController.text,
       password: _passwordController.text,
     );
 
@@ -75,17 +75,22 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       const SizedBox(height: 20),
                       TextFormField(
-                        controller: _emailController,
-                        keyboardType: TextInputType.emailAddress,
-                        autofillHints: const [AutofillHints.email],
-                        decoration: const InputDecoration(labelText: 'Email'),
+                        controller: _emailOrPhoneController,
+                        keyboardType: TextInputType.text,
+                        autofillHints: const [
+                          AutofillHints.username,
+                          AutofillHints.telephoneNumber,
+                        ],
+                        decoration: const InputDecoration(
+                          labelText: 'Email or phone',
+                        ),
                         validator: (value) {
                           final text = value?.trim() ?? '';
                           if (text.isEmpty) {
-                            return 'Email is required';
+                            return 'Email or phone is required';
                           }
-                          if (!text.contains('@')) {
-                            return 'Enter a valid email';
+                          if (text.length < 3) {
+                            return 'Must be at least 3 characters';
                           }
                           return null;
                         },

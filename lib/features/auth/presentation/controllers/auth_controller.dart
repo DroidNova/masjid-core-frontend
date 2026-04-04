@@ -77,13 +77,13 @@ class AuthController extends ChangeNotifier {
   }
 
   Future<bool> login({
-    required String email,
+    required String emailOrPhone,
     required String password,
   }) async {
     return _submitAuth(
       action: () => _authRepository.login(
         payload: {
-          'emailOrPhone': email.trim(),
+          'emailOrPhone': emailOrPhone.trim(),
           'password': password,
         },
       ),
@@ -147,7 +147,20 @@ class AuthController extends ChangeNotifier {
 
     final authResult = await action();
     switch (authResult) {
-      case ApiSuccess<AuthTokens>():
+      case ApiSuccess<AuthTokens>(:final data):
+        final user = data.user;
+        if (user != null) {
+          _setState(
+            _state.copyWith(
+              status: AuthStatus.authenticated,
+              user: user,
+              clearError: true,
+              isSubmitting: false,
+              isLoggingOut: false,
+            ),
+          );
+          return true;
+        }
         final userResult = await _authRepository.getCurrentUser();
         final success = await _applyCurrentUserResult(userResult);
         if (!success) {
