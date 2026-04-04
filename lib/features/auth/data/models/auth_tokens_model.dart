@@ -23,7 +23,10 @@ class AuthTokensModel {
 
   factory AuthTokensModel.fromResponse(dynamic raw) {
     final json = ResponseMapper.unwrapDataMap(raw);
-    return AuthTokensModel.fromJson(json);
+    final tokenMap = (json['tokens'] is Map<String, dynamic>)
+        ? json['tokens'] as Map<String, dynamic>
+        : json;
+    return AuthTokensModel.fromJson(tokenMap);
   }
 
   AuthTokens toEntity() {

@@ -83,7 +83,7 @@ class AuthController extends ChangeNotifier {
     return _submitAuth(
       action: () => _authRepository.login(
         payload: {
-          'email': email.trim(),
+          'emailOrPhone': email.trim(),
           'password': password,
         },
       ),
@@ -98,7 +98,7 @@ class AuthController extends ChangeNotifier {
     return _submitAuth(
       action: () => _authRepository.register(
         payload: {
-          'name': name.trim(),
+          'fullName': name.trim(),
           'email': email.trim(),
           'password': password,
         },

@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:platform_core_frontend/core/errors/app_exception.dart';
 import 'package:platform_core_frontend/core/network/api_result.dart';
 import 'package:platform_core_frontend/core/storage/token_storage.dart';
@@ -63,6 +65,7 @@ class AuthRepositoryImpl implements AuthRepository {
 
     switch (entityResult) {
       case ApiSuccess<AuthTokens>(:final data):
+        print('persisting tokens access tkn ${data.accessToken} and refresh tkn ${data.refreshToken}');
         await _tokenStorage.saveAccessToken(data.accessToken);
         await _tokenStorage.saveRefreshToken(data.refreshToken);
         return ApiSuccess<AuthTokens>(data);
