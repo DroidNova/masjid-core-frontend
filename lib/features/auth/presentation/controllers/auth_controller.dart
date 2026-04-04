@@ -194,6 +194,10 @@ class AuthController extends ChangeNotifier {
 
   String _toUserMessage(AppException exception) {
     if (exception is UnauthorizedException) {
+      final message = exception.message.toLowerCase();
+      if (message.contains('invalid credential')) {
+        return 'Invalid email or password.';
+      }
       return 'Session expired. Please login again.';
     }
     if (exception is NetworkException) {
@@ -201,6 +205,9 @@ class AuthController extends ChangeNotifier {
     }
     if (exception is ServerException) {
       return 'Server error. Please try again shortly.';
+    }
+    if (exception.message.trim().isNotEmpty) {
+      return exception.message;
     }
     return 'Unable to complete request. Please try again.';
   }

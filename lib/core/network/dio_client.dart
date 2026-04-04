@@ -145,14 +145,15 @@ class DioClient {
 
   AppException _mapDioException(DioException exception) {
     final statusCode = exception.response?.statusCode;
+    final apiMessage = _extractApiErrorMessage(exception);
 
     if (statusCode == 401) {
-      return const UnauthorizedException();
+      return UnauthorizedException(apiMessage ?? 'Unauthorized request');
     }
 
     if (statusCode != null && statusCode >= 500) {
       return ServerException(
-        message: 'Server error',
+        message: apiMessage ?? 'Server error',
         code: statusCode,
       );
     }
@@ -164,6 +165,31 @@ class DioClient {
       return const NetworkException();
     }
 
+    if (statusCode != null && statusCode >= 400) {
+      return UnknownException(apiMessage ?? 'Request failed');
+    }
+
     return UnknownException(exception.message ?? 'Request failed');
+  }
+
+  String? _extractApiErrorMessage(DioException exception) {
+    final data = exception.response?.data;
+    if (data is! JsonMap) {
+      return null;
+    }
+
+    final message = data['message'];
+    if (message is String && message.trim().isNotEmpty) {
+      return message.trim();
+    }
+
+    if (message is List && message.isNotEmpty) {
+      final first = message.first;
+      if (first is String && first.trim().isNotEmpty) {
+        return first.trim();
+      }
+    }
+
+    return null;
   }
 }
