@@ -18,8 +18,6 @@ class ProfilePage extends StatelessWidget {
           children: [
             Text('Account Information', style: Theme.of(context).textTheme.headlineSmall),
             const SizedBox(height: 16),
-            Text('ID: ${user?.id ?? '-'}'),
-            const SizedBox(height: 8),
             Text('Name: ${user?.displayName ?? '-'}'),
             const SizedBox(height: 8),
             Text('Email: ${user?.email ?? '-'}'),
