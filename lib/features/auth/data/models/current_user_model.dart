@@ -28,7 +28,8 @@ class CurrentUserModel {
       // TODO(BACKEND): confirm canonical identifier key for this payload.
       id: (json['id'] ?? json['userId'] ?? '').toString(),
       email: (json['email'] ?? '').toString(),
-      displayName: (json['name'] ?? json['displayName'])?.toString(),
+      displayName:
+          (json['fullName'] ?? json['name'] ?? json['displayName'])?.toString(),
       roles: roles,
       permissions: permissions,
     );

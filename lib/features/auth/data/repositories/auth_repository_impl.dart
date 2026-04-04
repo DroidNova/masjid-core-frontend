@@ -65,7 +65,6 @@ class AuthRepositoryImpl implements AuthRepository {
 
     switch (entityResult) {
       case ApiSuccess<AuthTokens>(:final data):
-        print('persisting tokens access tkn ${data.accessToken} and refresh tkn ${data.refreshToken}');
         await _tokenStorage.saveAccessToken(data.accessToken);
         await _tokenStorage.saveRefreshToken(data.refreshToken);
         return ApiSuccess<AuthTokens>(data);
