@@ -32,7 +32,18 @@ class AuthTokensModel {
     final tokenMap = (json['tokens'] is Map<String, dynamic>)
         ? json['tokens'] as Map<String, dynamic>
         : json;
-    return AuthTokensModel.fromJson(tokenMap);
+    final userMap = (json['user'] is Map<String, dynamic>)
+        ? json['user'] as JsonMap
+        : (tokenMap['user'] is Map<String, dynamic>)
+            ? tokenMap['user'] as JsonMap
+            : null;
+
+    final auth = AuthTokensModel.fromJson(tokenMap);
+    return AuthTokensModel(
+      accessToken: auth.accessToken,
+      refreshToken: auth.refreshToken,
+      user: userMap == null ? auth.user : CurrentUserModel.fromJson(userMap),
+    );
   }
 
   AuthTokens toEntity() {
