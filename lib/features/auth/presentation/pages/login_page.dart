@@ -135,7 +135,7 @@ class _LoginPageState extends State<LoginPage> {
                       TextButton(
                         onPressed: state.isSubmitting
                             ? null
-                            : () => Navigator.pushNamed(
+                            : () => Navigator.pushReplacementNamed(
                                 context,
                                 AppRoutes.register,
                               ),

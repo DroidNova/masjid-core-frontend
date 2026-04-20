@@ -50,7 +50,7 @@ class _RegisterPageState extends State<RegisterPage> {
       return;
     }
 
-    Navigator.of(context).pushNamedAndRemoveUntil(AppRoutes.home, (_) => false);
+    Navigator.of(context).pushNamedAndRemoveUntil(AppRoutes.login, (_) => false);
   }
 
   @override
@@ -159,7 +159,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       TextButton(
                         onPressed: state.isSubmitting
                             ? null
-                            : () => Navigator.pushNamed(
+                            : () => Navigator.pushReplacementNamed(
                                 context,
                                 AppRoutes.login,
                               ),
