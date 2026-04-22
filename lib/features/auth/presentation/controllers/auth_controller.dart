@@ -95,15 +95,38 @@ class AuthController extends ChangeNotifier {
     required String email,
     required String password,
   }) async {
-    return _submitAuth(
-      action: () => _authRepository.register(
-        payload: {
-          'fullName': name.trim(),
-          'email': email.trim(),
-          'password': password,
-        },
+    _setState(
+      _state.copyWith(
+        isSubmitting: true,
+        clearError: true,
       ),
     );
+
+    final result = await _authRepository.register(
+      payload: {
+        'fullName': name.trim(),
+        'email': email.trim(),
+        'password': password,
+      },
+    );
+
+    switch (result) {
+      case ApiSuccess<AuthTokens>():
+        await _tokenStorage.clearTokens();
+        _setState(
+          _state.copyWith(
+            status: AuthStatus.unauthenticated,
+            clearUser: true,
+            clearError: true,
+            isSubmitting: false,
+            isLoggingOut: false,
+          ),
+        );
+        return true;
+      case ApiFailure<AuthTokens>(:final exception):
+        _markUnauthenticated(message: _toUserMessage(exception));
+        return false;
+    }
   }
 
   Future<void> logout() async {

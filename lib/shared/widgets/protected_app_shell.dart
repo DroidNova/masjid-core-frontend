@@ -24,6 +24,15 @@ class ProtectedAppShell extends StatelessWidget {
     Navigator.of(context).pushNamedAndRemoveUntil(AppRoutes.login, (_) => false);
   }
 
+  void _navigateToTopLevelRoute(BuildContext context, String routeName) {
+    final currentRouteName = ModalRoute.of(context)?.settings.name;
+    if (currentRouteName == routeName) {
+      return;
+    }
+
+    Navigator.of(context).pushReplacementNamed(routeName);
+  }
+
   @override
   Widget build(BuildContext context) {
     final controller = AuthScope.of(context);
@@ -38,16 +47,17 @@ class ProtectedAppShell extends StatelessWidget {
         title: Text(title),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pushNamed(context, AppRoutes.home),
+            onPressed: () => _navigateToTopLevelRoute(context, AppRoutes.home),
             child: const Text('Home'),
           ),
           TextButton(
-            onPressed: () => Navigator.pushNamed(context, AppRoutes.profile),
+            onPressed: () => _navigateToTopLevelRoute(context, AppRoutes.profile),
             child: const Text('Profile'),
           ),
           if (canAccessAdmin)
             TextButton(
-              onPressed: () => Navigator.pushNamed(context, AppRoutes.adminUsers),
+              onPressed: () =>
+                  _navigateToTopLevelRoute(context, AppRoutes.adminUsers),
               child: const Text('Admin'),
             ),
           if (actions != null) ...actions!,
