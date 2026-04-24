@@ -9,9 +9,10 @@ class AccessPolicy {
   }
 
   static bool hasPermission(CurrentUser? user, String permission) {
-    final normalized = permission.toLowerCase();
-    return user?.permissions
-            .any((entry) => entry.toLowerCase() == normalized) ??
+    final normalized = _normalizePermission(permission);
+    return user?.permissions.any(
+          (entry) => _normalizePermission(entry) == normalized,
+        ) ??
         false;
   }
 
@@ -22,10 +23,16 @@ class AccessPolicy {
   }
 
   static bool canManageUsers(CurrentUser? user) {
-    return hasPermission(user, 'users:write') || canViewAdmin(user);
+    return hasPermission(user, 'users.update') ||
+        hasPermission(user, 'users:write') ||
+        canViewAdmin(user);
   }
 
   static bool canViewSettings(CurrentUser? user) {
     return hasPermission(user, 'settings:read') || canViewAdmin(user);
+  }
+
+  static String _normalizePermission(String permission) {
+    return permission.trim().toLowerCase().replaceAll(':', '.');
   }
 }

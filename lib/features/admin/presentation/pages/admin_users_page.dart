@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:platform_core_frontend/core/routing/app_router.dart';
 import 'package:platform_core_frontend/features/admin/domain/repositories/admin_repository.dart';
 import 'package:platform_core_frontend/features/admin/presentation/controllers/admin_users_controller.dart';
@@ -115,10 +116,7 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
                                           .map(
                                             (user) => DataRow(
                                               onSelectChanged: (_) {
-                                                Navigator.pushNamed(
-                                                  context,
-                                                  AppRoutes.adminUserDetail(user.id),
-                                                );
+                                                context.push(AppRoutes.adminUserDetail(user.id));
                                               },
                                               cells: [
                                                 DataCell(Text(user.id)),
@@ -153,10 +151,8 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
                                             UserStatusChip(status: user.status),
                                           ],
                                         ),
-                                        onTap: () => Navigator.pushNamed(
-                                          context,
-                                          AppRoutes.adminUserDetail(user.id),
-                                        ),
+                                        onTap: () =>
+                                            context.push(AppRoutes.adminUserDetail(user.id)),
                                       ),
                                     );
                                   },

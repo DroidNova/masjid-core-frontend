@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:platform_core_frontend/core/routing/app_router.dart';
 import 'package:platform_core_frontend/core/widgets/app_scaffold.dart';
 import 'package:platform_core_frontend/features/auth/presentation/auth_scope.dart';
@@ -50,7 +51,7 @@ class _RegisterPageState extends State<RegisterPage> {
       return;
     }
 
-    Navigator.of(context).pushNamedAndRemoveUntil(AppRoutes.login, (_) => false);
+    context.go(AppRoutes.login);
   }
 
   @override
@@ -159,10 +160,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       TextButton(
                         onPressed: state.isSubmitting
                             ? null
-                            : () => Navigator.pushReplacementNamed(
-                                context,
-                                AppRoutes.login,
-                              ),
+                            : () => context.go(AppRoutes.login),
                         child: const Text('Already have an account? Login'),
                       ),
                     ],

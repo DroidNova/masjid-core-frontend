@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:platform_core_frontend/features/admin/domain/repositories/admin_repository.dart';
 import 'package:platform_core_frontend/features/admin/presentation/controllers/admin_user_detail_controller.dart';
+import 'package:platform_core_frontend/features/admin/presentation/policies/admin_user_policy.dart';
 import 'package:platform_core_frontend/features/admin/presentation/widgets/roles_wrap.dart';
 import 'package:platform_core_frontend/features/admin/presentation/widgets/user_status_chip.dart';
 import 'package:platform_core_frontend/features/auth/presentation/auth_scope.dart';
@@ -32,8 +33,6 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
   ];
 
   static const List<String> _roleOptions = <String>[
-    // TODO(BACKEND): replace temporary role options with API-driven role catalog.
-    'SUPER_ADMIN',
     'ADMIN',
     'USER',
   ];
@@ -83,7 +82,7 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
     _showFeedback();
   }
 
-  Future<void> _showRoleDialog() async {
+  Future<void> _showRoleDialog(List<String> availableRoles) async {
     final currentRoles = _controller.state.user?.roles.toSet() ?? <String>{};
     final selectedRoles = <String>{...currentRoles};
 
@@ -97,7 +96,7 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
               return SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
-                  children: _roleOptions
+                  children: availableRoles
                       .map(
                         (role) => CheckboxListTile(
                           dense: true,
@@ -154,6 +153,7 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
   @override
   Widget build(BuildContext context) {
     final authController = AuthScope.of(context);
+    final actor = authController.state.user;
     if (!authController.canManageUsers) {
       return const ProtectedAppShell(
         title: 'User Detail',
@@ -195,6 +195,13 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
                 if (user == null) {
                   return const Center(child: Text('User not found.'));
                 }
+                final canEditStatus = AdminUserPolicy.canEditStatus(actor, user);
+                final canEditRoles = AdminUserPolicy.canEditRoles(actor, user);
+                final availableRoles = AdminUserPolicy.availableAssignableRoles(actor, user)
+                    .where((role) => _roleOptions.contains(role))
+                    .toList(growable: false);
+                final readOnlyReason = AdminUserPolicy.readOnlyReason(actor, user);
+                final showActions = canEditStatus || canEditRoles;
 
                 return ListView(
                   children: [
@@ -229,32 +236,44 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
                       Text('Updated: ${user.updatedAt}'),
                     ],
                     const SizedBox(height: 20),
-                    Wrap(
-                      spacing: 10,
-                      runSpacing: 10,
-                      children: [
-                        ElevatedButton(
-                          onPressed: state.isUpdatingStatus ? null : _showStatusDialog,
-                          child: state.isUpdatingStatus
-                              ? const SizedBox(
-                                  height: 16,
-                                  width: 16,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
-                                )
-                              : const Text('Update Status'),
-                        ),
-                        OutlinedButton(
-                          onPressed: state.isAssigningRoles ? null : _showRoleDialog,
-                          child: state.isAssigningRoles
-                              ? const SizedBox(
-                                  height: 16,
-                                  width: 16,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
-                                )
-                              : const Text('Assign Roles'),
-                        ),
-                      ],
-                    ),
+                    if (readOnlyReason != null) ...[
+                      Text(
+                        readOnlyReason,
+                        style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                      ),
+                      const SizedBox(height: 12),
+                    ],
+                    if (showActions)
+                      Wrap(
+                        spacing: 10,
+                        runSpacing: 10,
+                        children: [
+                          if (canEditStatus)
+                            ElevatedButton(
+                              onPressed: state.isUpdatingStatus ? null : _showStatusDialog,
+                              child: state.isUpdatingStatus
+                                  ? const SizedBox(
+                                      height: 16,
+                                      width: 16,
+                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                    )
+                                  : const Text('Update Status'),
+                            ),
+                          if (canEditRoles && availableRoles.isNotEmpty)
+                            OutlinedButton(
+                              onPressed: state.isAssigningRoles
+                                  ? null
+                                  : () => _showRoleDialog(availableRoles),
+                              child: state.isAssigningRoles
+                                  ? const SizedBox(
+                                      height: 16,
+                                      width: 16,
+                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                    )
+                                  : const Text('Assign Roles'),
+                            ),
+                        ],
+                      ),
                   ],
                 );
               },

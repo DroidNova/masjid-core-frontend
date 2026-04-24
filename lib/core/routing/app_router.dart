@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:platform_core_frontend/features/admin/domain/repositories/admin_repository.dart';
 import 'package:platform_core_frontend/features/admin/presentation/pages/admin_user_detail_page.dart';
 import 'package:platform_core_frontend/features/admin/presentation/pages/admin_users_page.dart';
@@ -33,57 +33,59 @@ class AppRouter {
   AppRouter({
     required AuthController authController,
     required AdminRepository adminRepository,
-  })  : _authController = authController,
-        _adminRepository = adminRepository;
+  }) : _router = GoRouter(
+          routes: [
+            GoRoute(
+              path: AppRoutes.root,
+              builder: (_, __) => const SplashPage(),
+            ),
+            GoRoute(
+              path: AppRoutes.login,
+              builder: (_, __) => const LoginPage(),
+            ),
+            GoRoute(
+              path: AppRoutes.register,
+              builder: (_, __) => const RegisterPage(),
+            ),
+            GoRoute(
+              path: AppRoutes.home,
+              builder: (_, __) => const HomePage(),
+            ),
+            GoRoute(
+              path: AppRoutes.profile,
+              builder: (_, __) => const ProfilePage(),
+            ),
+            GoRoute(
+              path: AppRoutes.adminUsers,
+              builder: (_, __) => AdminUsersPage(repository: adminRepository),
+            ),
+            GoRoute(
+              path: '${AppRoutes.adminUsers}/:id',
+              builder: (_, state) => AdminUserDetailPage(
+                userId: state.pathParameters['id'] ?? '',
+                repository: adminRepository,
+              ),
+            ),
+          ],
+          redirect: (context, state) {
+            final isAuthenticated = authController.state.isAuthenticated;
+            final routeName = state.fullPath ?? state.uri.path;
 
-  final AuthController _authController;
-  final AdminRepository _adminRepository;
-
-  Route<dynamic> onGenerateRoute(RouteSettings settings) {
-    final isAuthenticated = _authController.state.isAuthenticated;
-    final routeName = settings.name ?? AppRoutes.root;
-
-    if (_isProtectedRoute(routeName) && !isAuthenticated) {
-      return MaterialPageRoute<void>(builder: (_) => const LoginPage());
-    }
-
-    if (_isPublicAuthRoute(routeName) && isAuthenticated) {
-      return MaterialPageRoute<void>(builder: (_) => const HomePage());
-    }
-
-    if (_isAdminRoute(routeName) && !_authController.canAccessAdmin) {
-      return MaterialPageRoute<void>(builder: (_) => const HomePage());
-    }
-
-    if (routeName.startsWith('${AppRoutes.adminUsers}/')) {
-      final userId = routeName.replaceFirst('${AppRoutes.adminUsers}/', '');
-      return MaterialPageRoute<void>(
-        builder: (_) => AdminUserDetailPage(
-          userId: userId,
-          repository: _adminRepository,
-        ),
-      );
-    }
-
-    switch (routeName) {
-      case AppRoutes.root:
-        return MaterialPageRoute<void>(builder: (_) => const SplashPage());
-      case AppRoutes.login:
-        return MaterialPageRoute<void>(builder: (_) => const LoginPage());
-      case AppRoutes.register:
-        return MaterialPageRoute<void>(builder: (_) => const RegisterPage());
-      case AppRoutes.home:
-        return MaterialPageRoute<void>(builder: (_) => const HomePage());
-      case AppRoutes.profile:
-        return MaterialPageRoute<void>(builder: (_) => const ProfilePage());
-      case AppRoutes.adminUsers:
-        return MaterialPageRoute<void>(
-          builder: (_) => AdminUsersPage(repository: _adminRepository),
+            if (_isProtectedRoute(routeName) && !isAuthenticated) {
+              return AppRoutes.login;
+            }
+            if (_isPublicAuthRoute(routeName) && isAuthenticated) {
+              return AppRoutes.home;
+            }
+            if (_isAdminRoute(routeName) && !authController.canAccessAdmin) {
+              return AppRoutes.home;
+            }
+            return null;
+          },
+          refreshListenable: authController,
         );
-      default:
-        return MaterialPageRoute<void>(builder: (_) => const SplashPage());
-    }
-  }
+  final GoRouter _router;
+  GoRouter get router => _router;
 
   bool _isProtectedRoute(String routeName) {
     return routeName == AppRoutes.home ||

@@ -21,12 +21,11 @@ class App extends StatelessWidget {
 
     return AuthScope(
       controller: services.authController,
-      child: MaterialApp(
+      child: MaterialApp.router(
         debugShowCheckedModeBanner: false,
         title: services.config.appName,
         theme: AppTheme.light(),
-        initialRoute: AppRoutes.root,
-        onGenerateRoute: appRouter.onGenerateRoute,
+        routerConfig: appRouter.router,
       ),
     );
   }

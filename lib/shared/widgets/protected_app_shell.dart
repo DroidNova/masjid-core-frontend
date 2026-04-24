@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:platform_core_frontend/core/routing/app_router.dart';
 import 'package:platform_core_frontend/features/auth/presentation/auth_scope.dart';
 
@@ -21,16 +22,11 @@ class ProtectedAppShell extends StatelessWidget {
       return;
     }
 
-    Navigator.of(context).pushNamedAndRemoveUntil(AppRoutes.login, (_) => false);
+    context.go(AppRoutes.login);
   }
 
   void _navigateToTopLevelRoute(BuildContext context, String routeName) {
-    final currentRouteName = ModalRoute.of(context)?.settings.name;
-    if (currentRouteName == routeName) {
-      return;
-    }
-
-    Navigator.of(context).pushReplacementNamed(routeName);
+    context.go(routeName);
   }
 
   @override
