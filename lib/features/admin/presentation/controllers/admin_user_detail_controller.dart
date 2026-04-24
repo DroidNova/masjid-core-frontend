@@ -90,10 +90,13 @@ class AdminUserDetailController extends ChangeNotifier {
 
   String _toUserMessage(AppException exception) {
     if (exception is UnauthorizedException) {
-      return 'You are not authorized to perform this action.';
+      return exception.message;
     }
     if (exception is NetworkException) {
       return 'Network issue. Please try again.';
+    }
+    if (exception.message.trim().isNotEmpty) {
+      return exception.message;
     }
     return 'Unable to complete admin action.';
   }

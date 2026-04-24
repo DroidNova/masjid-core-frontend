@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:platform_core_frontend/core/routing/app_router.dart';
 import 'package:platform_core_frontend/core/widgets/app_scaffold.dart';
 import 'package:platform_core_frontend/features/auth/presentation/auth_scope.dart';
@@ -43,18 +44,12 @@ class _SplashPageState extends State<SplashPage> {
     }
 
     if (state.status == AuthStatus.authenticated) {
-      Navigator.of(context).pushNamedAndRemoveUntil(
-        AppRoutes.home,
-        (_) => false,
-      );
+      context.go(AppRoutes.home);
       return;
     }
 
     if (state.status == AuthStatus.unauthenticated) {
-      Navigator.of(context).pushNamedAndRemoveUntil(
-        AppRoutes.login,
-        (_) => false,
-      );
+      context.go(AppRoutes.login);
     }
   }
 

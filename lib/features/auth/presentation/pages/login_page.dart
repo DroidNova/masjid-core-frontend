@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:platform_core_frontend/core/routing/app_router.dart';
 import 'package:platform_core_frontend/core/widgets/app_scaffold.dart';
 import 'package:platform_core_frontend/features/auth/presentation/auth_scope.dart';
@@ -45,7 +46,7 @@ class _LoginPageState extends State<LoginPage> {
       return;
     }
 
-    Navigator.of(context).pushNamedAndRemoveUntil(AppRoutes.home, (_) => false);
+    context.go(AppRoutes.home);
   }
 
   @override
@@ -135,10 +136,7 @@ class _LoginPageState extends State<LoginPage> {
                       TextButton(
                         onPressed: state.isSubmitting
                             ? null
-                            : () => Navigator.pushReplacementNamed(
-                                context,
-                                AppRoutes.register,
-                              ),
+                            : () => context.go(AppRoutes.register),
                         child: const Text('Create an account'),
                       ),
                     ],

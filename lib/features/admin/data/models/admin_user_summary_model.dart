@@ -24,7 +24,7 @@ class AdminUserSummaryModel {
       // TODO(BACKEND): confirm canonical identifier key for this payload.
       id: (json['id'] ?? json['userId'] ?? '').toString(),
       email: (json['email'] ?? '').toString(),
-      name: (json['name'] ?? json['displayName'])?.toString(),
+      name: (json['fullName'] ?? json['name'] ?? json['displayName'])?.toString(),
       status: (json['status'] ?? 'UNKNOWN').toString(),
       roles: roles,
     );

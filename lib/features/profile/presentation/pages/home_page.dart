@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:platform_core_frontend/core/routing/app_router.dart';
 import 'package:platform_core_frontend/features/auth/presentation/auth_scope.dart';
 import 'package:platform_core_frontend/shared/widgets/protected_app_shell.dart';
@@ -35,13 +36,12 @@ class HomePage extends StatelessWidget {
                 runSpacing: 12,
                 children: [
                   ElevatedButton(
-                    onPressed: () => Navigator.pushNamed(context, AppRoutes.profile),
+                    onPressed: () => context.go(AppRoutes.profile),
                     child: const Text('Profile'),
                   ),
                   if (canAccessAdmin)
                     OutlinedButton(
-                      onPressed: () =>
-                          Navigator.pushNamed(context, AppRoutes.adminUsers),
+                      onPressed: () => context.go(AppRoutes.adminUsers),
                       child: const Text('Admin Users'),
                     ),
                   OutlinedButton(
