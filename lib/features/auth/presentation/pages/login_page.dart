@@ -13,7 +13,6 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final _formKey = GlobalKey<FormState>();
   final _emailOrPhoneController = TextEditingController();
   final _passwordController = TextEditingController();
 
@@ -33,10 +32,6 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
-
     final success = await _authController!.login(
       emailOrPhone: _emailOrPhoneController.text,
       password: _passwordController.text,
@@ -65,82 +60,53 @@ class _LoginPageState extends State<LoginPage> {
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 520),
               child: SingleChildScrollView(
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(
-                        'Sign in to continue.',
-                        style: Theme.of(context).textTheme.bodyLarge,
-                      ),
-                      const SizedBox(height: 20),
-                      TextFormField(
-                        controller: _emailOrPhoneController,
-                        keyboardType: TextInputType.text,
-                        autofillHints: const [
-                          AutofillHints.username,
-                          AutofillHints.telephoneNumber,
-                        ],
-                        decoration: const InputDecoration(
-                          labelText: 'Email or phone',
-                        ),
-                        validator: (value) {
-                          final text = value?.trim() ?? '';
-                          if (text.isEmpty) {
-                            return 'Email or phone is required';
-                          }
-                          if (text.length < 3) {
-                            return 'Must be at least 3 characters';
-                          }
-                          return null;
-                        },
-                        onChanged: (_) => authController.clearError(),
-                      ),
-                      const SizedBox(height: 12),
-                      TextFormField(
-                        controller: _passwordController,
-                        obscureText: true,
-                        autofillHints: const [AutofillHints.password],
-                        decoration: const InputDecoration(labelText: 'Password'),
-                        validator: (value) {
-                          if ((value ?? '').isEmpty) {
-                            return 'Password is required';
-                          }
-                          return null;
-                        },
-                        onChanged: (_) => authController.clearError(),
-                      ),
-                      if (state.errorMessage != null) ...[
-                        const SizedBox(height: 12),
-                        Text(
-                          state.errorMessage!,
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.error,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      'Sign in to continue.',
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                    const SizedBox(height: 20),
+                    TextFormField(
+                      controller: _emailOrPhoneController,
+                      keyboardType: TextInputType.text,
+                      autofillHints: const [
+                        AutofillHints.username,
+                        AutofillHints.telephoneNumber,
                       ],
-                      const SizedBox(height: 20),
-                      ElevatedButton(
-                        onPressed: state.isSubmitting ? null : _submit,
-                        child: state.isSubmitting
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(strokeWidth: 2),
-                              )
-                            : const Text('Login'),
+                      decoration: const InputDecoration(
+                        labelText: 'Email or phone',
                       ),
-                      const SizedBox(height: 8),
-                      TextButton(
-                        onPressed: state.isSubmitting
-                            ? null
-                            : () => context.go(AppRoutes.register),
-                        child: const Text('Create an account'),
-                      ),
-                    ],
-                  ),
+                      onChanged: (_) => authController.clearError(),
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _passwordController,
+                      obscureText: true,
+                      autofillHints: const [AutofillHints.password],
+                      decoration: const InputDecoration(labelText: 'Password'),
+                      onChanged: (_) => authController.clearError(),
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: state.isSubmitting ? null : _submit,
+                      child: state.isSubmitting
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Text('Login'),
+                    ),
+                    const SizedBox(height: 8),
+                    TextButton(
+                      onPressed: state.isSubmitting
+                          ? null
+                          : () => context.go(AppRoutes.register),
+                      child: const Text('Create an account'),
+                    ),
+                  ],
                 ),
               ),
             ),
