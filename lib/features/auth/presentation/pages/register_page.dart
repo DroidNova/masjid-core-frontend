@@ -59,6 +59,28 @@ class _RegisterPageState extends State<RegisterPage> {
     context.go(AppRoutes.login);
   }
 
+
+  String? _extractFieldError(dynamic value) {
+    if (value is List && value.isNotEmpty) {
+      final first = value.first;
+      if (first is String && first.trim().isNotEmpty) {
+        return first.trim();
+      }
+    }
+    if (value is String && value.trim().isNotEmpty) {
+      return value.trim();
+    }
+    return null;
+  }
+
+  String? _serverFieldError(Map<String, dynamic>? fieldErrors, String key) {
+    if (fieldErrors == null) {
+      return null;
+    }
+
+    return _extractFieldError(fieldErrors[key]);
+  }
+
   @override
   Widget build(BuildContext context) {
     final authController = _authController!;
@@ -95,7 +117,7 @@ class _RegisterPageState extends State<RegisterPage> {
                           if ((value ?? '').trim().isEmpty) {
                             return 'Name is required';
                           }
-                          return null;
+                          return _serverFieldError(state.fieldErrors, 'fullName');
                         },
                         onChanged: (_) => authController.clearError(),
                       ),
@@ -112,7 +134,7 @@ class _RegisterPageState extends State<RegisterPage> {
                           if (!text.contains('@')) {
                             return 'Enter a valid email';
                           }
-                          return null;
+                          return _serverFieldError(state.fieldErrors, 'email');
                         },
                         onChanged: (_) => authController.clearError(),
                       ),
@@ -126,7 +148,7 @@ class _RegisterPageState extends State<RegisterPage> {
                           if (text.length < 8) {
                             return 'Password must be at least 8 characters';
                           }
-                          return null;
+                          return _serverFieldError(state.fieldErrors, 'password');
                         },
                         onChanged: (_) => authController.clearError(),
                       ),
