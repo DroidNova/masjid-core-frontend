@@ -1,4 +1,4 @@
-import 'package:platform_core_frontend/core/errors/app_exception.dart';
+import 'package:platform_core_frontend/core/network/api_exception.dart';
 
 sealed class ApiResult<T> {
   const ApiResult();
@@ -16,13 +16,13 @@ class ApiSuccess<T> extends ApiResult<T> {
 class ApiFailure<T> extends ApiResult<T> {
   const ApiFailure(this.exception);
 
-  final AppException exception;
+  final ApiException exception;
 }
 
 extension ApiResultX<T> on ApiResult<T> {
   R fold<R>({
     required R Function(T data) onSuccess,
-    required R Function(AppException exception) onFailure,
+    required R Function(ApiException exception) onFailure,
   }) {
     return switch (this) {
       ApiSuccess<T>(:final data) => onSuccess(data),

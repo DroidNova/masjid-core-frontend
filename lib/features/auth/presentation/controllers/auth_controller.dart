@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:platform_core_frontend/core/auth/access_policy.dart';
-import 'package:platform_core_frontend/core/errors/app_exception.dart';
+import 'package:platform_core_frontend/core/constants/api_error_codes.dart';
+import 'package:platform_core_frontend/core/network/api_exception.dart';
 import 'package:platform_core_frontend/core/network/api_result.dart';
 import 'package:platform_core_frontend/core/storage/token_storage.dart';
 import 'package:platform_core_frontend/features/auth/domain/entities/auth_tokens.dart';
@@ -72,7 +73,8 @@ class AuthController extends ChangeNotifier {
 
     await _tokenStorage.clearTokens();
     _markUnauthenticated(
-      message: 'Your session has expired. Please sign in again.',
+      message: 'Your session has expired. Please login again.',
+      errorCode: ApiErrorCodes.sessionExpired,
     );
   }
 
@@ -124,7 +126,7 @@ class AuthController extends ChangeNotifier {
         );
         return true;
       case ApiFailure<AuthTokens>(:final exception):
-        _markUnauthenticated(message: _toUserMessage(exception));
+        _markUnauthenticated(message: _toUserMessage(exception), errorCode: exception.errorCode, fieldErrors: exception.errors);
         return false;
     }
   }
@@ -191,7 +193,7 @@ class AuthController extends ChangeNotifier {
         }
         return success;
       case ApiFailure<AuthTokens>(:final exception):
-        _markUnauthenticated(message: _toUserMessage(exception));
+        _markUnauthenticated(message: _toUserMessage(exception), errorCode: exception.errorCode, fieldErrors: exception.errors);
         return false;
     }
   }
@@ -210,17 +212,19 @@ class AuthController extends ChangeNotifier {
         );
         return true;
       case ApiFailure<CurrentUser>(:final exception):
-        _markUnauthenticated(message: _toUserMessage(exception));
+        _markUnauthenticated(message: _toUserMessage(exception), errorCode: exception.errorCode, fieldErrors: exception.errors);
         return false;
     }
   }
 
-  void _markUnauthenticated({String? message}) {
+  void _markUnauthenticated({String? message, String? errorCode, Map<String, dynamic>? fieldErrors}) {
     _setState(
       _state.copyWith(
         status: AuthStatus.unauthenticated,
         clearUser: true,
         errorMessage: message,
+        errorCode: errorCode,
+        fieldErrors: fieldErrors,
         clearError: message == null,
         isSubmitting: false,
         isLoggingOut: false,
@@ -228,24 +232,24 @@ class AuthController extends ChangeNotifier {
     );
   }
 
-  String _toUserMessage(AppException exception) {
-    if (exception is UnauthorizedException) {
-      final message = exception.message.toLowerCase();
-      if (message.contains('invalid credential')) {
-        return 'Invalid email or password.';
-      }
-      return 'Session expired. Please login again.';
+  String _toUserMessage(ApiException exception) {
+    if (exception.isInvalidCredentials) {
+      return 'Invalid username or password.';
     }
-    if (exception is NetworkException) {
-      return 'Network unavailable. Check your connection and try again.';
+    if (exception.isSessionExpired) {
+      return 'Your session has expired. Please login again.';
     }
-    if (exception is ServerException) {
-      return 'Server error. Please try again shortly.';
+    if (exception.isForbidden) {
+      return 'You do not have permission to perform this action.';
     }
-    if (exception.message.trim().isNotEmpty) {
-      return exception.message;
+    if (exception.isValidationError) {
+      return exception.message.isNotEmpty ? exception.message : 'Please check the entered details.';
     }
-    return 'Unable to complete request. Please try again.';
+    final message = exception.message.trim();
+    if (message.isNotEmpty) {
+      return message;
+    }
+    return 'Something went wrong. Please try again later.';
   }
 
   bool _isBlank(String? value) => value == null || value.isEmpty;

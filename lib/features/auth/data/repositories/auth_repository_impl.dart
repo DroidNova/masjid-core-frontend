@@ -1,6 +1,6 @@
 import 'dart:math';
 
-import 'package:platform_core_frontend/core/errors/app_exception.dart';
+import 'package:platform_core_frontend/core/network/api_exception.dart';
 import 'package:platform_core_frontend/core/network/api_result.dart';
 import 'package:platform_core_frontend/core/storage/token_storage.dart';
 import 'package:platform_core_frontend/features/auth/data/datasources/auth_remote_datasource.dart';
@@ -37,7 +37,7 @@ class AuthRepositoryImpl implements AuthRepository {
     final token = refreshToken ?? await _tokenStorage.getRefreshToken();
     if (token == null || token.isEmpty) {
       return const ApiFailure<AuthTokens>(
-        UnknownException('Missing refresh token'),
+        ApiException(message: 'Your session has expired. Please login again.'),
       );
     }
 

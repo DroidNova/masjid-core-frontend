@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:platform_core_frontend/core/errors/app_exception.dart';
+import 'package:platform_core_frontend/core/network/api_exception.dart';
 import 'package:platform_core_frontend/core/network/api_result.dart';
 import 'package:platform_core_frontend/features/admin/domain/entities/admin_user_summary.dart';
 import 'package:platform_core_frontend/features/admin/domain/repositories/admin_repository.dart';
@@ -62,12 +62,15 @@ class AdminUsersController extends ChangeNotifier {
 
   Future<void> retry() => loadUsers(query: _state.query);
 
-  String _toUserMessage(AppException exception) {
-    if (exception is UnauthorizedException) {
-      return 'You are not authorized to view admin users.';
+  String _toUserMessage(ApiException exception) {
+    if (exception.isForbidden) {
+      return 'You do not have permission to perform this action.';
     }
-    if (exception is NetworkException) {
-      return 'Network issue. Please try again.';
+    if (exception.isUnauthorized || exception.isSessionExpired) {
+      return 'Your session has expired. Please login again.';
+    }
+    if (exception.message.trim().isNotEmpty) {
+      return exception.message;
     }
     return 'Unable to load users right now.';
   }
