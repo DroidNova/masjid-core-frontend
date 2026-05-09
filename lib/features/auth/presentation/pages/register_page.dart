@@ -52,7 +52,12 @@ class _RegisterPageState extends State<RegisterPage> {
       password: _passwordController.text,
     );
 
-    if (!mounted || !success) {
+    if (!mounted) {
+      return;
+    }
+
+    if (!success) {
+      _formKey.currentState?.validate();
       return;
     }
 
