@@ -51,7 +51,7 @@ class DioClient {
     } on ApiException catch (error) {
       return ApiFailure<T>(error);
     } catch (_) {
-      return const ApiFailure<T>(ApiException(message: 'Something went wrong. Please try again later.'));
+      return ApiFailure<T>(const ApiException(message: 'Something went wrong. Please try again later.'));
     }
   }
 
