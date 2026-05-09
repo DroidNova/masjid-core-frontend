@@ -123,8 +123,8 @@ class _RegisterPageState extends State<RegisterPage> {
                         decoration: const InputDecoration(labelText: 'Password'),
                         validator: (value) {
                           final text = value ?? '';
-                          if (text.length < 6) {
-                            return 'Password must be at least 6 characters';
+                          if (text.length < 8) {
+                            return 'Password must be at least 8 characters';
                           }
                           return null;
                         },
