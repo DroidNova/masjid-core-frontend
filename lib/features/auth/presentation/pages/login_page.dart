@@ -71,6 +71,7 @@ class _LoginPageState extends State<LoginPage> {
                     TextFormField(
                       controller: _emailOrPhoneController,
                       keyboardType: TextInputType.text,
+                      textInputAction: TextInputAction.next,
                       autofillHints: const [
                         AutofillHints.username,
                         AutofillHints.telephoneNumber,
@@ -84,10 +85,22 @@ class _LoginPageState extends State<LoginPage> {
                     TextFormField(
                       controller: _passwordController,
                       obscureText: true,
+                      textInputAction: TextInputAction.done,
+                      onFieldSubmitted: (_) => state.isSubmitting ? null : _submit(),
                       autofillHints: const [AutofillHints.password],
                       decoration: const InputDecoration(labelText: 'Password'),
                       onChanged: (_) => authController.clearError(),
                     ),
+                    if (state.errorMessage != null) ...[
+                      const SizedBox(height: 12),
+                      Text(
+                        state.errorMessage!,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.error,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 20),
                     ElevatedButton(
                       onPressed: state.isSubmitting ? null : _submit,
