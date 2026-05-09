@@ -57,7 +57,6 @@ class _RegisterPageState extends State<RegisterPage> {
     }
 
     if (!success) {
-      _formKey.currentState?.validate();
       return;
     }
 
@@ -65,26 +64,6 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
 
-  String? _extractFieldError(dynamic value) {
-    if (value is List && value.isNotEmpty) {
-      final first = value.first;
-      if (first is String && first.trim().isNotEmpty) {
-        return first.trim();
-      }
-    }
-    if (value is String && value.trim().isNotEmpty) {
-      return value.trim();
-    }
-    return null;
-  }
-
-  String? _serverFieldError(Map<String, dynamic>? fieldErrors, String key) {
-    if (fieldErrors == null) {
-      return null;
-    }
-
-    return _extractFieldError(fieldErrors[key]);
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -122,7 +101,7 @@ class _RegisterPageState extends State<RegisterPage> {
                           if ((value ?? '').trim().isEmpty) {
                             return 'Name is required';
                           }
-                          return _serverFieldError(state.fieldErrors, 'fullName');
+                          return null;
                         },
                         onChanged: (_) => authController.clearError(),
                       ),
@@ -139,7 +118,7 @@ class _RegisterPageState extends State<RegisterPage> {
                           if (!text.contains('@')) {
                             return 'Enter a valid email';
                           }
-                          return _serverFieldError(state.fieldErrors, 'email');
+                          return null;
                         },
                         onChanged: (_) => authController.clearError(),
                       ),
@@ -153,7 +132,7 @@ class _RegisterPageState extends State<RegisterPage> {
                           if (text.length < 8) {
                             return 'Password must be at least 8 characters';
                           }
-                          return _serverFieldError(state.fieldErrors, 'password');
+                          return null;
                         },
                         onChanged: (_) => authController.clearError(),
                       ),
