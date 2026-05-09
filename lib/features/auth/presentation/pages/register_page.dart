@@ -20,6 +20,7 @@ class _RegisterPageState extends State<RegisterPage> {
   final _confirmPasswordController = TextEditingController();
 
   AuthController? _authController;
+  bool _hasSubmitted = false;
 
   @override
   void didChangeDependencies() {
@@ -37,6 +38,10 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   Future<void> _submit() async {
+    setState(() {
+      _hasSubmitted = true;
+    });
+
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -72,6 +77,9 @@ class _RegisterPageState extends State<RegisterPage> {
               child: SingleChildScrollView(
                 child: Form(
                   key: _formKey,
+                  autovalidateMode: _hasSubmitted
+                      ? AutovalidateMode.onUserInteraction
+                      : AutovalidateMode.disabled,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
@@ -115,8 +123,8 @@ class _RegisterPageState extends State<RegisterPage> {
                         decoration: const InputDecoration(labelText: 'Password'),
                         validator: (value) {
                           final text = value ?? '';
-                          if (text.length < 6) {
-                            return 'Password must be at least 6 characters';
+                          if (text.length < 8) {
+                            return 'Password must be at least 8 characters';
                           }
                           return null;
                         },
