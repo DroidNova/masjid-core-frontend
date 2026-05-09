@@ -149,16 +149,22 @@ class _RegisterPageState extends State<RegisterPage> {
                         },
                         onChanged: (_) => authController.clearError(),
                       ),
-                      if (state.errorMessage != null) ...[
-                        const SizedBox(height: 12),
-                        Text(
-                          state.errorMessage!,
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.error,
-                            fontWeight: FontWeight.w500,
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        height: 44,
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            state.errorMessage ?? '',
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.error,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                         ),
-                      ],
+                      ),
                       const SizedBox(height: 20),
                       ElevatedButton(
                         onPressed: state.isSubmitting ? null : _submit,
