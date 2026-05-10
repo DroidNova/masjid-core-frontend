@@ -21,7 +21,10 @@ class _LoginPageState extends State<LoginPage> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _authController ??= AuthScope.of(context);
+    if (_authController == null) {
+      _authController = AuthScope.of(context);
+      _authController!.clearError();
+    }
   }
 
   @override

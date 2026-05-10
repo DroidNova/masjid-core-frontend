@@ -25,7 +25,10 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _authController ??= AuthScope.of(context);
+    if (_authController == null) {
+      _authController = AuthScope.of(context);
+      _authController!.clearError();
+    }
   }
 
   @override
