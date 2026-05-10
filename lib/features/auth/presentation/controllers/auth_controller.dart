@@ -100,7 +100,6 @@ class AuthController extends ChangeNotifier {
     _setState(
       _state.copyWith(
         isSubmitting: true,
-        clearError: true,
       ),
     );
 
@@ -166,7 +165,6 @@ class AuthController extends ChangeNotifier {
     _setState(
       _state.copyWith(
         isSubmitting: true,
-        clearError: true,
       ),
     );
 
