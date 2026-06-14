@@ -100,7 +100,6 @@ class AuthController extends ChangeNotifier {
     _setState(
       _state.copyWith(
         isSubmitting: true,
-        clearError: true,
       ),
     );
 
@@ -166,7 +165,6 @@ class AuthController extends ChangeNotifier {
     _setState(
       _state.copyWith(
         isSubmitting: true,
-        clearError: true,
       ),
     );
 
@@ -243,6 +241,10 @@ class AuthController extends ChangeNotifier {
       return 'You do not have permission to perform this action.';
     }
     if (exception.isValidationError) {
+      final validationMessage = _validationErrorsMessage(exception.errors);
+      if (validationMessage != null) {
+        return validationMessage;
+      }
       return exception.message.isNotEmpty ? exception.message : 'Please check the entered details.';
     }
     final message = exception.message.trim();
@@ -251,6 +253,36 @@ class AuthController extends ChangeNotifier {
     }
     return 'Something went wrong. Please try again later.';
   }
+
+  String? _validationErrorsMessage(Map<String, dynamic>? errors) {
+    if (errors == null || errors.isEmpty) {
+      return null;
+    }
+
+    final messages = <String>[];
+    for (final value in errors.values) {
+      if (value is String && value.trim().isNotEmpty) {
+        messages.add(value.trim());
+      } else if (value is List) {
+        for (final item in value) {
+          if (item is String && item.trim().isNotEmpty) {
+            messages.add(item.trim());
+          }
+        }
+      }
+    }
+
+    if (messages.isEmpty) {
+      return null;
+    }
+
+    if (messages.length == 1) {
+      return messages.first;
+    }
+
+    return messages.map((message) => '• $message').join('\n');
+  }
+
 
   bool _isBlank(String? value) => value == null || value.isEmpty;
 
