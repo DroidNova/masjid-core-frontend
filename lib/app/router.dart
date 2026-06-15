@@ -8,6 +8,10 @@ import 'package:platform_core_frontend/features/finance/presentation/add_collect
 import 'package:platform_core_frontend/features/finance/presentation/add_expense_screen.dart';
 import 'package:platform_core_frontend/features/main_shell/presentation/main_shell_screen.dart';
 import 'package:platform_core_frontend/features/masjid_request/presentation/masjid_request_form_screen.dart';
+import 'package:platform_core_frontend/features/projects/data/models/project_model.dart';
+import 'package:platform_core_frontend/features/projects/presentation/add_project_screen.dart';
+import 'package:platform_core_frontend/features/projects/presentation/edit_project_screen.dart';
+import 'package:platform_core_frontend/features/projects/presentation/project_detail_screen.dart';
 import 'package:platform_core_frontend/features/splash/presentation/splash_screen.dart';
 
 final GoRouter appRouter = GoRouter(
@@ -66,6 +70,34 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/finance/add-expense',
       builder: (context, state) => const AddExpenseScreen(),
+    ),
+    GoRoute(
+      path: '/projects/add',
+      builder: (context, state) => const AddProjectScreen(),
+    ),
+    GoRoute(
+      path: '/projects/:id/edit',
+      builder: (context, state) {
+        final projectId = state.pathParameters['id'] ?? '';
+        final extra = state.extra;
+        final project = extra is ProjectModel ? extra : null;
+        return EditProjectScreen(
+          projectId: projectId,
+          initialProject: project,
+        );
+      },
+    ),
+    GoRoute(
+      path: '/projects/:id',
+      builder: (context, state) {
+        final projectId = state.pathParameters['id'] ?? '';
+        final extra = state.extra;
+        final project = extra is ProjectModel ? extra : null;
+        return ProjectDetailScreen(
+          projectId: projectId,
+          initialProject: project,
+        );
+      },
     ),
     GoRoute(
       path: '/main',

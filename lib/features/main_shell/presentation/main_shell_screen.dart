@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:platform_core_frontend/features/dashboard/presentation/home_dashboard_screen.dart';
 import 'package:platform_core_frontend/features/finance/presentation/finance_screen.dart';
+import 'package:platform_core_frontend/features/projects/presentation/projects_screen.dart';
 
 class MainShellScreen extends StatefulWidget {
   const MainShellScreen({super.key});
@@ -22,7 +23,7 @@ class _MainShellScreenState extends State<MainShellScreen> {
   static const List<Widget> _screens = <Widget>[
     HomeDashboardScreen(),
     FinanceScreen(),
-    _PlaceholderTab(label: 'Projects'),
+    ProjectsScreen(),
     _PlaceholderTab(label: 'Community'),
   ];
 
