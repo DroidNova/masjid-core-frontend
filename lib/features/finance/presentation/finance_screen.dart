@@ -163,6 +163,8 @@ class _FinanceScreenState extends State<FinanceScreen> {
                 children: <Widget>[
                   FinanceSummaryCard(summary: _summary),
                   const SizedBox(height: 12),
+                  const _ImamSalaryNavigationCard(),
+                  const SizedBox(height: 12),
                   SegmentedButton<int>(
                     segments: const <ButtonSegment<int>>[
                       ButtonSegment<int>(
@@ -223,6 +225,50 @@ class _FinanceScreenState extends State<FinanceScreen> {
                 ],
               ),
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+
+class _ImamSalaryNavigationCard extends StatelessWidget {
+  const _ImamSalaryNavigationCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: InkWell(
+        onTap: () => context.push('/imam-salaries'),
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: <Widget>[
+              Icon(
+                Icons.payments_outlined,
+                color: Theme.of(context).colorScheme.primary,
+                size: 32,
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      'Imam Salary',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text('Manage salary paid/unpaid records'),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right),
+            ],
           ),
         ),
       ),

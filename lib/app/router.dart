@@ -10,6 +10,11 @@ import 'package:platform_core_frontend/features/auth/presentation/login_phone_sc
 import 'package:platform_core_frontend/features/auth/presentation/otp_screen.dart';
 import 'package:platform_core_frontend/features/finance/presentation/add_collection_screen.dart';
 import 'package:platform_core_frontend/features/finance/presentation/add_expense_screen.dart';
+import 'package:platform_core_frontend/features/imam_salary/models/imam_salary_model.dart';
+import 'package:platform_core_frontend/features/imam_salary/presentation/add_imam_salary_screen.dart';
+import 'package:platform_core_frontend/features/imam_salary/presentation/edit_imam_salary_screen.dart';
+import 'package:platform_core_frontend/features/imam_salary/presentation/imam_salary_detail_screen.dart';
+import 'package:platform_core_frontend/features/imam_salary/presentation/imam_salary_screen.dart';
 import 'package:platform_core_frontend/features/main_shell/presentation/main_shell_screen.dart';
 import 'package:platform_core_frontend/features/masjid_request/presentation/masjid_request_form_screen.dart';
 import 'package:platform_core_frontend/features/namaz_time/presentation/update_namaz_time_screen.dart';
@@ -76,6 +81,40 @@ final GoRouter appRouter = GoRouter(
       path: '/finance/add-expense',
       builder: (context, state) => const AddExpenseScreen(),
     ),
+
+    GoRoute(
+      path: '/imam-salaries',
+      builder: (context, state) => const ImamSalaryScreen(),
+    ),
+    GoRoute(
+      path: '/imam-salaries/add',
+      builder: (context, state) => const AddImamSalaryScreen(),
+    ),
+    GoRoute(
+      path: '/imam-salaries/:id/edit',
+      builder: (context, state) {
+        final salaryId = state.pathParameters['id'] ?? '';
+        final extra = state.extra;
+        final salary = extra is ImamSalaryModel ? extra : null;
+        return EditImamSalaryScreen(
+          salaryId: salaryId,
+          initialSalary: salary,
+        );
+      },
+    ),
+    GoRoute(
+      path: '/imam-salaries/:id',
+      builder: (context, state) {
+        final salaryId = state.pathParameters['id'] ?? '';
+        final extra = state.extra;
+        final salary = extra is ImamSalaryModel ? extra : null;
+        return ImamSalaryDetailScreen(
+          salaryId: salaryId,
+          initialSalary: salary,
+        );
+      },
+    ),
+
     GoRoute(
       path: '/announcements',
       builder: (context, state) => const AnnouncementsScreen(),
