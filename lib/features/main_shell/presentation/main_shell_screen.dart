@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:platform_core_frontend/features/community/presentation/community_screen.dart';
 import 'package:platform_core_frontend/features/dashboard/presentation/home_dashboard_screen.dart';
 import 'package:platform_core_frontend/features/finance/presentation/finance_screen.dart';
 import 'package:platform_core_frontend/features/projects/presentation/projects_screen.dart';
@@ -24,7 +25,7 @@ class _MainShellScreenState extends State<MainShellScreen> {
     HomeDashboardScreen(),
     FinanceScreen(),
     ProjectsScreen(),
-    _PlaceholderTab(label: 'Community'),
+    CommunityScreen(),
   ];
 
   @override
