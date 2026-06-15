@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:platform_core_frontend/features/dashboard/presentation/home_dashboard_screen.dart';
 
 class MainShellScreen extends StatefulWidget {
   const MainShellScreen({super.key});
@@ -17,17 +18,20 @@ class _MainShellScreenState extends State<MainShellScreen> {
     _MainTab(label: 'Community', icon: Icons.groups_outlined),
   ];
 
+  static const List<Widget> _screens = <Widget>[
+    HomeDashboardScreen(),
+    _PlaceholderTab(label: 'Finance'),
+    _PlaceholderTab(label: 'Projects'),
+    _PlaceholderTab(label: 'Community'),
+  ];
+
   @override
   Widget build(BuildContext context) {
-    final selectedTab = _tabs[_selectedIndex];
-
     return Scaffold(
       appBar: AppBar(title: const Text('Masjid Core')),
-      body: Center(
-        child: Text(
-          '${selectedTab.label} placeholder',
-          style: Theme.of(context).textTheme.headlineSmall,
-        ),
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: _screens,
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
@@ -51,4 +55,20 @@ class _MainTab {
 
   final String label;
   final IconData icon;
+}
+
+class _PlaceholderTab extends StatelessWidget {
+  const _PlaceholderTab({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Text(
+        '$label placeholder',
+        style: Theme.of(context).textTheme.headlineSmall,
+      ),
+    );
+  }
 }
