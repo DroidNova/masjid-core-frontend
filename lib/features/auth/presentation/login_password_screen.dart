@@ -4,74 +4,68 @@ import 'package:platform_core_frontend/features/auth/data/auth_repository.dart';
 import 'package:platform_core_frontend/shared/widgets/app_button.dart';
 import 'package:platform_core_frontend/shared/widgets/app_text_field.dart';
 
-class LoginPhoneScreen extends StatefulWidget {
-  const LoginPhoneScreen({super.key, AuthRepository? authRepository})
-      : _authRepository = authRepository;
+class LoginPasswordScreen extends StatefulWidget {
+  const LoginPasswordScreen({
+    super.key,
+    required this.phone,
+    AuthRepository? authRepository,
+  }) : _authRepository = authRepository;
 
+  final String phone;
   final AuthRepository? _authRepository;
 
   @override
-  State<LoginPhoneScreen> createState() => _LoginPhoneScreenState();
+  State<LoginPasswordScreen> createState() => _LoginPasswordScreenState();
 }
 
-class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
-  final TextEditingController _phoneController = TextEditingController();
+class _LoginPasswordScreenState extends State<LoginPasswordScreen> {
+  final TextEditingController _passwordController = TextEditingController();
   late final AuthRepository _authRepository =
       widget._authRepository ?? AuthRepository();
   bool _isLoading = false;
 
   @override
   void dispose() {
-    _phoneController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
   Future<void> _continue() async {
-    final phone = _phoneController.text.trim();
+    final password = _passwordController.text.trim();
 
-    if (phone.isEmpty) {
-      _showError('Please enter your phone number.');
+    if (password.isEmpty) {
+      _showError('Please enter your password.');
       return;
     }
 
-    if (phone.length < 10) {
-      _showError('Phone number must be at least 10 digits.');
+    if (password.length < 6) {
+      _showError('Password must be at least 6 characters.');
       return;
     }
 
     setState(() => _isLoading = true);
 
     try {
-      final response = await _authRepository.startLogin(phone);
+      final response = await _authRepository.submitPassword(
+        widget.phone,
+        password,
+      );
 
       if (!mounted) return;
 
-      if (response.requiresOtp) {
-        final challengeId = response.challengeId;
-        if (challengeId == null || challengeId.isEmpty) {
-          _showError('OTP challenge is missing. Please try again.');
-          return;
-        }
-
-        context.go(
-          '/login-otp',
-          extra: <String, String>{
-            'phone': response.phone,
-            'challengeId': challengeId,
-          },
-        );
+      final challengeId = response.challengeId;
+      if (!response.requiresOtp || challengeId == null || challengeId.isEmpty) {
+        _showError('OTP challenge is missing. Please try again.');
         return;
       }
 
-      if (response.requiresPassword) {
-        context.go(
-          '/login-password',
-          extra: <String, String>{'phone': response.phone},
-        );
-        return;
-      }
-
-      _showError('Unsupported login step. Please try again.');
+      context.go(
+        '/login-otp',
+        extra: <String, String>{
+          'phone': response.phone,
+          'challengeId': challengeId,
+        },
+      );
     } catch (error) {
       if (mounted) _showError(_cleanError(error));
     } finally {
@@ -94,7 +88,7 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Login')),
+      appBar: AppBar(title: const Text('Enter Password')),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -105,24 +99,23 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
                   Text(
-                    'Login',
+                    'Enter Password',
                     style: textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Enter your phone number to continue',
+                    'Password is required for admin/imam/committee login',
                     style: textTheme.bodyLarge?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
                   const SizedBox(height: 24),
                   AppTextField(
-                    controller: _phoneController,
-                    label: 'Phone number',
-                    hint: '9876543210',
-                    keyboardType: TextInputType.phone,
+                    controller: _passwordController,
+                    label: 'Password',
+                    obscureText: true,
                     textInputAction: TextInputAction.done,
                   ),
                   const SizedBox(height: 24),
@@ -135,7 +128,7 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
                   AppButton(
                     label: 'Back',
                     isOutlined: true,
-                    onPressed: () => context.go('/auth'),
+                    onPressed: () => context.go('/login-phone'),
                   ),
                 ],
               ),

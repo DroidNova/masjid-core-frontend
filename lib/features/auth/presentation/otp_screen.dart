@@ -4,74 +4,55 @@ import 'package:platform_core_frontend/features/auth/data/auth_repository.dart';
 import 'package:platform_core_frontend/shared/widgets/app_button.dart';
 import 'package:platform_core_frontend/shared/widgets/app_text_field.dart';
 
-class LoginPhoneScreen extends StatefulWidget {
-  const LoginPhoneScreen({super.key, AuthRepository? authRepository})
-      : _authRepository = authRepository;
+class OtpScreen extends StatefulWidget {
+  const OtpScreen({
+    super.key,
+    required this.phone,
+    required this.challengeId,
+    AuthRepository? authRepository,
+  }) : _authRepository = authRepository;
 
+  final String phone;
+  final String challengeId;
   final AuthRepository? _authRepository;
 
   @override
-  State<LoginPhoneScreen> createState() => _LoginPhoneScreenState();
+  State<OtpScreen> createState() => _OtpScreenState();
 }
 
-class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
-  final TextEditingController _phoneController = TextEditingController();
+class _OtpScreenState extends State<OtpScreen> {
+  final TextEditingController _otpController = TextEditingController();
   late final AuthRepository _authRepository =
       widget._authRepository ?? AuthRepository();
   bool _isLoading = false;
 
   @override
   void dispose() {
-    _phoneController.dispose();
+    _otpController.dispose();
     super.dispose();
   }
 
-  Future<void> _continue() async {
-    final phone = _phoneController.text.trim();
+  Future<void> _verify() async {
+    final otp = _otpController.text.trim();
 
-    if (phone.isEmpty) {
-      _showError('Please enter your phone number.');
+    if (otp.isEmpty) {
+      _showError('Please enter the OTP.');
       return;
     }
 
-    if (phone.length < 10) {
-      _showError('Phone number must be at least 10 digits.');
+    if (otp.length != 6) {
+      _showError('OTP must be 6 digits.');
       return;
     }
 
     setState(() => _isLoading = true);
 
     try {
-      final response = await _authRepository.startLogin(phone);
+      await _authRepository.verifyOtp(widget.phone, widget.challengeId, otp);
 
       if (!mounted) return;
 
-      if (response.requiresOtp) {
-        final challengeId = response.challengeId;
-        if (challengeId == null || challengeId.isEmpty) {
-          _showError('OTP challenge is missing. Please try again.');
-          return;
-        }
-
-        context.go(
-          '/login-otp',
-          extra: <String, String>{
-            'phone': response.phone,
-            'challengeId': challengeId,
-          },
-        );
-        return;
-      }
-
-      if (response.requiresPassword) {
-        context.go(
-          '/login-password',
-          extra: <String, String>{'phone': response.phone},
-        );
-        return;
-      }
-
-      _showError('Unsupported login step. Please try again.');
+      context.go('/main');
     } catch (error) {
       if (mounted) _showError(_cleanError(error));
     } finally {
@@ -94,7 +75,7 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Login')),
+      appBar: AppBar(title: const Text('Verify OTP')),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -105,37 +86,42 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
                   Text(
-                    'Login',
+                    'Verify OTP',
                     style: textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Enter your phone number to continue',
+                    'Enter the 6 digit OTP',
                     style: textTheme.bodyLarge?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'For testing use 111111',
+                    style: textTheme.bodyMedium,
+                  ),
                   const SizedBox(height: 24),
                   AppTextField(
-                    controller: _phoneController,
-                    label: 'Phone number',
-                    hint: '9876543210',
-                    keyboardType: TextInputType.phone,
+                    controller: _otpController,
+                    label: 'OTP',
+                    hint: '111111',
+                    keyboardType: TextInputType.number,
                     textInputAction: TextInputAction.done,
                   ),
                   const SizedBox(height: 24),
                   AppButton(
-                    label: 'Continue',
+                    label: 'Verify',
                     isLoading: _isLoading,
-                    onPressed: _continue,
+                    onPressed: _verify,
                   ),
                   const SizedBox(height: 12),
                   AppButton(
                     label: 'Back',
                     isOutlined: true,
-                    onPressed: () => context.go('/auth'),
+                    onPressed: () => context.go('/login-phone'),
                   ),
                 ],
               ),
