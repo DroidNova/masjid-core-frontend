@@ -136,6 +136,20 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                   ),
                   const SizedBox(height: 12),
                   NamazTimeCard(namazTime: dashboard.namazTime),
+                  const SizedBox(height: 8),
+                  AppButton(
+                    label: 'Update Namaz Time',
+                    isOutlined: true,
+                    onPressed: () async {
+                      await context.push(
+                        '/namaz-time/update',
+                        extra: <String, dynamic>{
+                          'masjidId': dashboard.masjid?.id,
+                        },
+                      );
+                      if (mounted) await _loadDashboard();
+                    },
+                  ),
                   const SizedBox(height: 12),
                   AnnouncementPreviewCard(
                     announcements: dashboard.latestAnnouncements,

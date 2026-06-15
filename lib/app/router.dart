@@ -12,6 +12,7 @@ import 'package:platform_core_frontend/features/finance/presentation/add_collect
 import 'package:platform_core_frontend/features/finance/presentation/add_expense_screen.dart';
 import 'package:platform_core_frontend/features/main_shell/presentation/main_shell_screen.dart';
 import 'package:platform_core_frontend/features/masjid_request/presentation/masjid_request_form_screen.dart';
+import 'package:platform_core_frontend/features/namaz_time/presentation/update_namaz_time_screen.dart';
 import 'package:platform_core_frontend/features/projects/data/models/project_model.dart';
 import 'package:platform_core_frontend/features/projects/presentation/add_project_screen.dart';
 import 'package:platform_core_frontend/features/projects/presentation/edit_project_screen.dart';
@@ -93,6 +94,17 @@ final GoRouter appRouter = GoRouter(
           announcementId: announcementId,
           announcement: announcement,
         );
+      },
+    ),
+    GoRoute(
+      path: '/namaz-time/update',
+      builder: (context, state) {
+        final extra = state.extra;
+        String? masjidId;
+        if (extra is Map<String, dynamic>) {
+          masjidId = extra['masjidId']?.toString();
+        }
+        return UpdateNamazTimeScreen(masjidId: masjidId);
       },
     ),
     GoRoute(
