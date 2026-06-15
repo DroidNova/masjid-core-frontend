@@ -5,9 +5,13 @@ class AnnouncementPreviewCard extends StatelessWidget {
   const AnnouncementPreviewCard({
     super.key,
     required this.announcements,
+    this.onViewAll,
+    this.onAddAnnouncement,
   });
 
   final List<AnnouncementSummary> announcements;
+  final VoidCallback? onViewAll;
+  final VoidCallback? onAddAnnouncement;
 
   @override
   Widget build(BuildContext context) {
@@ -19,12 +23,30 @@ class AnnouncementPreviewCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
-            Text(
-              'Latest Announcements',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
+            Row(
+              children: <Widget>[
+                Expanded(
+                  child: Text(
+                    'Latest Announcements',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
+                ),
+                TextButton(
+                  onPressed: onViewAll,
+                  child: const Text('View All'),
+                ),
+              ],
             ),
+            if (onAddAnnouncement != null) ...<Widget>[
+              const SizedBox(height: 8),
+              OutlinedButton.icon(
+                onPressed: onAddAnnouncement,
+                icon: const Icon(Icons.add),
+                label: const Text('Add Announcement'),
+              ),
+            ],
             const SizedBox(height: 12),
             if (visibleAnnouncements.isEmpty)
               const Text('No announcements yet.')

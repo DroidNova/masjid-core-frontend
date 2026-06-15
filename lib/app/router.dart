@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:platform_core_frontend/features/announcements/data/models/announcement_model.dart';
+import 'package:platform_core_frontend/features/announcements/presentation/add_announcement_screen.dart';
+import 'package:platform_core_frontend/features/announcements/presentation/announcements_screen.dart';
+import 'package:platform_core_frontend/features/announcements/presentation/edit_announcement_screen.dart';
 import 'package:platform_core_frontend/features/auth/presentation/auth_landing_screen.dart';
 import 'package:platform_core_frontend/features/auth/presentation/login_password_screen.dart';
 import 'package:platform_core_frontend/features/auth/presentation/login_phone_screen.dart';
@@ -70,6 +74,26 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/finance/add-expense',
       builder: (context, state) => const AddExpenseScreen(),
+    ),
+    GoRoute(
+      path: '/announcements',
+      builder: (context, state) => const AnnouncementsScreen(),
+    ),
+    GoRoute(
+      path: '/announcements/add',
+      builder: (context, state) => const AddAnnouncementScreen(),
+    ),
+    GoRoute(
+      path: '/announcements/:id/edit',
+      builder: (context, state) {
+        final announcementId = state.pathParameters['id'] ?? '';
+        final extra = state.extra;
+        final announcement = extra is AnnouncementModel ? extra : null;
+        return EditAnnouncementScreen(
+          announcementId: announcementId,
+          announcement: announcement,
+        );
+      },
     ),
     GoRoute(
       path: '/projects/add',

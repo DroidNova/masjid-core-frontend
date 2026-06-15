@@ -139,6 +139,8 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                   const SizedBox(height: 12),
                   AnnouncementPreviewCard(
                     announcements: dashboard.latestAnnouncements,
+                    onViewAll: () => context.push('/announcements'),
+                    onAddAnnouncement: () => context.push('/announcements/add'),
                   ),
                   const SizedBox(height: 12),
                   FinanceSummaryCard(
