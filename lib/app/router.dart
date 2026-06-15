@@ -5,7 +5,7 @@ import 'package:platform_core_frontend/features/auth/presentation/login_password
 import 'package:platform_core_frontend/features/auth/presentation/login_phone_screen.dart';
 import 'package:platform_core_frontend/features/auth/presentation/otp_screen.dart';
 import 'package:platform_core_frontend/features/main_shell/presentation/main_shell_screen.dart';
-import 'package:platform_core_frontend/features/masjid_request/presentation/masjid_request_placeholder_screen.dart';
+import 'package:platform_core_frontend/features/masjid_request/presentation/masjid_request_form_screen.dart';
 import 'package:platform_core_frontend/features/splash/presentation/splash_screen.dart';
 
 final GoRouter appRouter = GoRouter(
@@ -55,7 +55,7 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: '/masjid-request',
-      builder: (context, state) => const MasjidRequestPlaceholderScreen(),
+      builder: (context, state) => const MasjidRequestFormScreen(),
     ),
     GoRoute(
       path: '/main',
