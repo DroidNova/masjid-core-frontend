@@ -8,7 +8,11 @@ class AuthSession {
   });
 
   factory AuthSession.fromJson(Map<String, dynamic> json) {
-    final userJson = json['user'];
+    final tokenJson = json['tokens'];
+    final tokenSource = tokenJson is Map<String, dynamic> ? tokenJson : json;
+    final userJson = json['user'] is Map<String, dynamic>
+        ? json['user']
+        : tokenSource['user'];
 
     if (userJson is! Map<String, dynamic>) {
       throw const FormatException('User information is missing from response.');
@@ -16,9 +20,17 @@ class AuthSession {
 
     return AuthSession(
       user: AppUser.fromJson(userJson),
-      accessToken: json['accessToken']?.toString() ?? '',
-      refreshToken: json['refreshToken']?.toString() ?? '',
+      accessToken: _readToken(tokenSource, 'accessToken', 'access_token'),
+      refreshToken: _readToken(tokenSource, 'refreshToken', 'refresh_token'),
     );
+  }
+
+  static String _readToken(
+    Map<String, dynamic> json,
+    String camelCaseKey,
+    String snakeCaseKey,
+  ) {
+    return (json[camelCaseKey] ?? json[snakeCaseKey])?.toString() ?? '';
   }
 
   final AppUser user;
