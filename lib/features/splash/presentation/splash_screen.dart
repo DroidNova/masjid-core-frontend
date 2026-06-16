@@ -1,13 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:platform_core_frontend/core/storage/token_storage.dart';
+import 'package:platform_core_frontend/features/auth/data/auth_repository.dart';
 import 'package:platform_core_frontend/shared/widgets/loading_view.dart';
 
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({super.key, TokenStorage? tokenStorage})
-      : _tokenStorage = tokenStorage;
+  const SplashScreen({
+    super.key,
+    TokenStorage? tokenStorage,
+    AuthRepository? authRepository,
+  })  : _tokenStorage = tokenStorage,
+        _authRepository = authRepository;
 
   final TokenStorage? _tokenStorage;
+  final AuthRepository? _authRepository;
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -15,6 +21,8 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen> {
   late final TokenStorage _tokenStorage = widget._tokenStorage ?? TokenStorage();
+  late final AuthRepository _authRepository =
+      widget._authRepository ?? AuthRepository();
 
   @override
   void initState() {
@@ -24,11 +32,26 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> _checkSession() async {
     await Future<void>.delayed(const Duration(milliseconds: 500));
-    final hasToken = await _tokenStorage.hasAccessToken();
+
+    final hasAccessToken = await _tokenStorage.hasAccessToken();
+    if (hasAccessToken) {
+      if (mounted) context.go('/main');
+      return;
+    }
+
+    final refreshToken = await _tokenStorage.getRefreshToken();
+    if (refreshToken != null && refreshToken.isNotEmpty) {
+      try {
+        await _authRepository.refreshSession();
+        if (mounted) context.go('/main');
+        return;
+      } catch (_) {
+        await _authRepository.clearLocalSession();
+      }
+    }
 
     if (!mounted) return;
-
-    context.go(hasToken ? '/main' : '/auth');
+    context.go('/auth');
   }
 
   @override

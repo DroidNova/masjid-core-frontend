@@ -3,6 +3,7 @@ import 'package:platform_core_frontend/features/community/presentation/community
 import 'package:platform_core_frontend/features/dashboard/presentation/home_dashboard_screen.dart';
 import 'package:platform_core_frontend/features/finance/presentation/finance_screen.dart';
 import 'package:platform_core_frontend/features/projects/presentation/projects_screen.dart';
+import 'package:platform_core_frontend/shared/widgets/logout_button.dart';
 
 class MainShellScreen extends StatefulWidget {
   const MainShellScreen({super.key});
@@ -31,7 +32,10 @@ class _MainShellScreenState extends State<MainShellScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Masjid Core')),
+      appBar: AppBar(
+        title: const Text('Masjid Core'),
+        actions: const <Widget>[LogoutButton()],
+      ),
       body: IndexedStack(
         index: _selectedIndex,
         children: _screens,
@@ -58,20 +62,4 @@ class _MainTab {
 
   final String label;
   final IconData icon;
-}
-
-class _PlaceholderTab extends StatelessWidget {
-  const _PlaceholderTab({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Text(
-        '$label placeholder',
-        style: Theme.of(context).textTheme.headlineSmall,
-      ),
-    );
-  }
 }

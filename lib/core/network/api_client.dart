@@ -1,11 +1,15 @@
 import 'package:dio/dio.dart';
 import 'package:platform_core_frontend/core/config/api_config.dart';
 import 'package:platform_core_frontend/core/network/auth_interceptor.dart';
+import 'package:platform_core_frontend/core/storage/session_storage.dart';
 import 'package:platform_core_frontend/core/storage/token_storage.dart';
 
 class ApiClient {
-  ApiClient({Dio? dio, TokenStorage? tokenStorage})
-      : dio = dio ?? Dio() {
+  ApiClient({
+    Dio? dio,
+    TokenStorage? tokenStorage,
+    SessionStorage? sessionStorage,
+  }) : dio = dio ?? Dio() {
     this.dio.options = BaseOptions(
       baseUrl: ApiConfig.baseUrl,
       connectTimeout: const Duration(seconds: 15),
@@ -17,7 +21,11 @@ class ApiClient {
     );
 
     this.dio.interceptors.add(
-          AuthInterceptor(tokenStorage: tokenStorage),
+          AuthInterceptor(
+            dio: this.dio,
+            tokenStorage: tokenStorage,
+            sessionStorage: sessionStorage,
+          ),
         );
   }
 
