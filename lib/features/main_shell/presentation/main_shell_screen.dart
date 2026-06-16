@@ -1,0 +1,77 @@
+import 'package:flutter/material.dart';
+import 'package:platform_core_frontend/features/community/presentation/community_screen.dart';
+import 'package:platform_core_frontend/features/dashboard/presentation/home_dashboard_screen.dart';
+import 'package:platform_core_frontend/features/finance/presentation/finance_screen.dart';
+import 'package:platform_core_frontend/features/projects/presentation/projects_screen.dart';
+
+class MainShellScreen extends StatefulWidget {
+  const MainShellScreen({super.key});
+
+  @override
+  State<MainShellScreen> createState() => _MainShellScreenState();
+}
+
+class _MainShellScreenState extends State<MainShellScreen> {
+  int _selectedIndex = 0;
+
+  static const List<_MainTab> _tabs = <_MainTab>[
+    _MainTab(label: 'Home', icon: Icons.home_outlined),
+    _MainTab(label: 'Finance', icon: Icons.account_balance_wallet_outlined),
+    _MainTab(label: 'Projects', icon: Icons.task_alt_outlined),
+    _MainTab(label: 'Community', icon: Icons.groups_outlined),
+  ];
+
+  static const List<Widget> _screens = <Widget>[
+    HomeDashboardScreen(),
+    FinanceScreen(),
+    ProjectsScreen(),
+    CommunityScreen(),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Masjid Core')),
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: _screens,
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _selectedIndex,
+        onTap: (index) => setState(() => _selectedIndex = index),
+        type: BottomNavigationBarType.fixed,
+        items: _tabs
+            .map(
+              (tab) => BottomNavigationBarItem(
+                icon: Icon(tab.icon),
+                label: tab.label,
+              ),
+            )
+            .toList(),
+      ),
+    );
+  }
+}
+
+class _MainTab {
+  const _MainTab({required this.label, required this.icon});
+
+  final String label;
+  final IconData icon;
+}
+
+class _PlaceholderTab extends StatelessWidget {
+  const _PlaceholderTab({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Text(
+        '$label placeholder',
+        style: Theme.of(context).textTheme.headlineSmall,
+      ),
+    );
+  }
+}
