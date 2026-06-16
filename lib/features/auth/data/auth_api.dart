@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:platform_core_frontend/core/network/api_client.dart';
 import 'package:platform_core_frontend/features/auth/data/models/auth_session.dart';
+import 'package:platform_core_frontend/features/auth/data/models/auth_tokens.dart';
 import 'package:platform_core_frontend/features/auth/data/models/login_start_response.dart';
 
 class AuthApi {
@@ -56,6 +57,33 @@ class AuthApi {
       );
 
       return AuthSession.fromJson(_extractData(response.data));
+    } on DioException catch (error) {
+      throw Exception(_readErrorMessage(error));
+    }
+  }
+
+  Future<AuthTokens> refreshToken(String refreshToken) async {
+    try {
+      final response = await _apiClient.dio.post<Map<String, dynamic>>(
+        '/auth/refresh',
+        data: <String, dynamic>{'refreshToken': refreshToken},
+      );
+
+      return AuthTokens.fromJson(_extractData(response.data));
+    } on DioException catch (error) {
+      throw Exception(_readErrorMessage(error));
+    }
+  }
+
+  Future<void> logout({String? refreshToken}) async {
+    try {
+      await _apiClient.dio.post<Map<String, dynamic>>(
+        '/auth/logout',
+        data: <String, dynamic>{
+          if (refreshToken != null && refreshToken.isNotEmpty)
+            'refreshToken': refreshToken,
+        },
+      );
     } on DioException catch (error) {
       throw Exception(_readErrorMessage(error));
     }

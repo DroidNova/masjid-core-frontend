@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:platform_core_frontend/core/auth/current_user_role_helper.dart';
+import 'package:platform_core_frontend/core/storage/session_storage.dart';
 import 'package:platform_core_frontend/features/auth/data/auth_repository.dart';
+import 'package:platform_core_frontend/features/auth/data/models/app_user.dart';
 import 'package:platform_core_frontend/features/community/data/community_repository.dart';
 import 'package:platform_core_frontend/features/community/data/models/community_user_model.dart';
 import 'package:platform_core_frontend/features/community/data/models/masjid_detail_model.dart';
@@ -14,11 +17,14 @@ class CommunityScreen extends StatefulWidget {
     super.key,
     CommunityRepository? communityRepository,
     AuthRepository? authRepository,
+    SessionStorage? sessionStorage,
   })  : _communityRepository = communityRepository,
-        _authRepository = authRepository;
+        _authRepository = authRepository,
+        _sessionStorage = sessionStorage;
 
   final CommunityRepository? _communityRepository;
   final AuthRepository? _authRepository;
+  final SessionStorage? _sessionStorage;
 
   @override
   State<CommunityScreen> createState() => _CommunityScreenState();
@@ -29,16 +35,26 @@ class _CommunityScreenState extends State<CommunityScreen> {
       widget._communityRepository ?? CommunityRepository();
   late final AuthRepository _authRepository =
       widget._authRepository ?? AuthRepository();
+  late final SessionStorage _sessionStorage =
+      widget._sessionStorage ?? SessionStorage();
 
   MasjidDetailModel? _masjid;
   List<CommunityUserModel> _users = <CommunityUserModel>[];
   String? _errorMessage;
   bool _isLoading = true;
+  AppUser? _currentUser;
 
   @override
   void initState() {
     super.initState();
+    _loadCurrentUser();
     _loadCommunity();
+  }
+
+  Future<void> _loadCurrentUser() async {
+    final user = await _sessionStorage.getUser();
+    if (!mounted) return;
+    setState(() => _currentUser = user);
   }
 
   Future<void> _loadCommunity() async {
@@ -100,6 +116,17 @@ class _CommunityScreenState extends State<CommunityScreen> {
   bool get _isNoMasjidError {
     final message = _errorMessage?.toLowerCase() ?? '';
     return message.contains('not assigned') || message.contains('masjid');
+  }
+
+  bool get _canAddUsers {
+    final user = _currentUser;
+    return user != null && CurrentUserRoleHelper.canAddUsers(user);
+  }
+
+  Future<void> _openAddUser() async {
+    await context.push('/community/add-user');
+    await _loadCurrentUser();
+    await _refreshCommunity();
   }
 
   List<CommunityUserModel> get _committeeUsers {
@@ -169,12 +196,26 @@ class _CommunityScreenState extends State<CommunityScreen> {
                   children: <Widget>[
                     Text(
                       'Community',
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      style: Theme.of(context)
+                          .textTheme
+                          .headlineMedium
+                          ?.copyWith(
                             fontWeight: FontWeight.bold,
                           ),
                     ),
                     const SizedBox(height: 6),
                     const Text('Masjid members and committee details'),
+                    if (_canAddUsers) ...<Widget>[
+                      const SizedBox(height: 16),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: FilledButton.icon(
+                          onPressed: _openAddUser,
+                          icon: const Icon(Icons.person_add_alt_1),
+                          label: const Text('Add User'),
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 16),
                     MasjidInfoCard(masjid: masjid),
                     const SizedBox(height: 12),

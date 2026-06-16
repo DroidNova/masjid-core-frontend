@@ -30,4 +30,16 @@ class AppUser {
   final String? status;
   final String? masjidId;
   final List<String> roles;
+
+  Map<String, dynamic> toJson() {
+    return <String, dynamic>{
+      'id': id,
+      'fullName': fullName,
+      'email': email,
+      'phone': phone,
+      'status': status,
+      'masjidId': masjidId,
+      'roles': roles,
+    };
+  }
 }
