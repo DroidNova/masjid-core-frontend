@@ -37,6 +37,10 @@ class AuthRepository {
       otp: otp,
     );
 
+    if (session.accessToken.isEmpty || session.refreshToken.isEmpty) {
+      throw const FormatException('Authentication token is missing.');
+    }
+
     await _tokenStorage.saveTokens(
       accessToken: session.accessToken,
       refreshToken: session.refreshToken,
