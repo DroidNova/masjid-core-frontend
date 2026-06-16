@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:platform_core_frontend/core/permissions/permission_helper.dart';
+import 'package:platform_core_frontend/core/storage/session_storage.dart';
 import 'package:platform_core_frontend/features/finance/presentation/widgets/finance_labels.dart';
 import 'package:platform_core_frontend/features/projects/data/models/project_model.dart';
 import 'package:platform_core_frontend/features/projects/data/projects_repository.dart';
@@ -14,11 +16,14 @@ class ProjectDetailScreen extends StatefulWidget {
     required this.projectId,
     this.initialProject,
     ProjectsRepository? projectsRepository,
-  }) : _projectsRepository = projectsRepository;
+    SessionStorage? sessionStorage,
+  })  : _projectsRepository = projectsRepository,
+        _sessionStorage = sessionStorage;
 
   final String projectId;
   final ProjectModel? initialProject;
   final ProjectsRepository? _projectsRepository;
+  final SessionStorage? _sessionStorage;
 
   @override
   State<ProjectDetailScreen> createState() => _ProjectDetailScreenState();
@@ -27,16 +32,30 @@ class ProjectDetailScreen extends StatefulWidget {
 class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
   late final ProjectsRepository _projectsRepository =
       widget._projectsRepository ?? ProjectsRepository();
+  late final SessionStorage _sessionStorage =
+      widget._sessionStorage ?? SessionStorage();
 
   ProjectModel? _project;
   String? _errorMessage;
   bool _isLoading = true;
   bool _isDeleting = false;
+  bool _canManageProjects = false;
 
   @override
   void initState() {
     super.initState();
+    _loadPermissions();
     _loadProject();
+  }
+
+  Future<void> _loadPermissions() async {
+    final user = await _sessionStorage.getUser();
+    if (!mounted) return;
+    setState(() {
+      _canManageProjects = PermissionHelper.canManageProjects(
+        user?.roles ?? const <String>[],
+      );
+    });
   }
 
   Future<void> _loadProject() async {
@@ -173,15 +192,17 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                       Text('Start Date: ${project.startDate ?? '-'}'),
                       Text('End Date: ${project.endDate ?? '-'}'),
                       Text('Created: ${project.createdAt ?? '-'}'),
-                      const SizedBox(height: 20),
-                      AppButton(label: 'Edit Project', onPressed: _editProject),
-                      const SizedBox(height: 12),
-                      AppButton(
-                        label: 'Delete / Cancel Project',
-                        isOutlined: true,
-                        isLoading: _isDeleting,
-                        onPressed: _deleteProject,
-                      ),
+                      if (_canManageProjects) ...<Widget>[
+                        const SizedBox(height: 20),
+                        AppButton(label: 'Edit Project', onPressed: _editProject),
+                        const SizedBox(height: 12),
+                        AppButton(
+                          label: 'Delete / Cancel Project',
+                          isOutlined: true,
+                          isLoading: _isDeleting,
+                          onPressed: _deleteProject,
+                        ),
+                      ],
                     ],
                   ),
                 ),

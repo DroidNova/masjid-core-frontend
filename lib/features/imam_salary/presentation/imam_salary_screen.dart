@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:platform_core_frontend/core/permissions/permission_helper.dart';
+import 'package:platform_core_frontend/core/storage/session_storage.dart';
 import 'package:platform_core_frontend/features/auth/data/auth_repository.dart';
+import 'package:platform_core_frontend/features/auth/data/models/app_user.dart';
 import 'package:platform_core_frontend/features/finance/presentation/widgets/finance_labels.dart';
 import 'package:platform_core_frontend/features/imam_salary/data/imam_salary_repository.dart';
 import 'package:platform_core_frontend/features/imam_salary/models/imam_salary_model.dart';
@@ -14,11 +17,14 @@ class ImamSalaryScreen extends StatefulWidget {
     super.key,
     ImamSalaryRepository? imamSalaryRepository,
     AuthRepository? authRepository,
+    SessionStorage? sessionStorage,
   })  : _imamSalaryRepository = imamSalaryRepository,
-        _authRepository = authRepository;
+        _authRepository = authRepository,
+        _sessionStorage = sessionStorage;
 
   final ImamSalaryRepository? _imamSalaryRepository;
   final AuthRepository? _authRepository;
+  final SessionStorage? _sessionStorage;
 
   @override
   State<ImamSalaryScreen> createState() => _ImamSalaryScreenState();
@@ -29,15 +35,25 @@ class _ImamSalaryScreenState extends State<ImamSalaryScreen> {
       widget._imamSalaryRepository ?? ImamSalaryRepository();
   late final AuthRepository _authRepository =
       widget._authRepository ?? AuthRepository();
+  late final SessionStorage _sessionStorage =
+      widget._sessionStorage ?? SessionStorage();
 
   List<ImamSalaryModel> _records = <ImamSalaryModel>[];
   String? _errorMessage;
   bool _isLoading = true;
+  AppUser? _currentUser;
 
   @override
   void initState() {
     super.initState();
+    _loadCurrentUser();
     _loadRecords();
+  }
+
+  Future<void> _loadCurrentUser() async {
+    final user = await _sessionStorage.getUser();
+    if (!mounted) return;
+    setState(() => _currentUser = user);
   }
 
   Future<void> _loadRecords() async {
@@ -152,6 +168,10 @@ class _ImamSalaryScreenState extends State<ImamSalaryScreen> {
       (sum, record) => sum + record.dueAmount,
     );
 
+    final canManageImamSalary = PermissionHelper.canManageImamSalary(
+      _currentUser?.roles ?? const <String>[],
+    );
+
     return Scaffold(
       appBar: AppBar(title: const Text('Imam Salary')),
       body: RefreshIndicator(
@@ -184,11 +204,13 @@ class _ImamSalaryScreenState extends State<ImamSalaryScreen> {
                       totalDue: totalDue,
                     ),
                     const SizedBox(height: 12),
-                    AppButton(
-                      label: 'Add Salary',
-                      onPressed: _openAddSalary,
-                    ),
-                    const SizedBox(height: 12),
+                    if (canManageImamSalary) ...<Widget>[
+                      AppButton(
+                        label: 'Add Salary',
+                        onPressed: _openAddSalary,
+                      ),
+                      const SizedBox(height: 12),
+                    ],
                     if (_records.isEmpty)
                       const ImamSalaryEmptyView()
                     else

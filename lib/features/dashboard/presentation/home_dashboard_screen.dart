@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:platform_core_frontend/core/permissions/permission_helper.dart';
+import 'package:platform_core_frontend/core/storage/session_storage.dart';
 import 'package:platform_core_frontend/features/auth/data/auth_repository.dart';
+import 'package:platform_core_frontend/features/auth/data/models/app_user.dart';
 import 'package:platform_core_frontend/features/dashboard/data/dashboard_repository.dart';
 import 'package:platform_core_frontend/features/dashboard/data/models/dashboard_response.dart';
 import 'package:platform_core_frontend/features/dashboard/presentation/widgets/announcement_preview_card.dart';
@@ -17,11 +20,14 @@ class HomeDashboardScreen extends StatefulWidget {
     super.key,
     DashboardRepository? dashboardRepository,
     AuthRepository? authRepository,
+    SessionStorage? sessionStorage,
   })  : _dashboardRepository = dashboardRepository,
-        _authRepository = authRepository;
+        _authRepository = authRepository,
+        _sessionStorage = sessionStorage;
 
   final DashboardRepository? _dashboardRepository;
   final AuthRepository? _authRepository;
+  final SessionStorage? _sessionStorage;
 
   @override
   State<HomeDashboardScreen> createState() => _HomeDashboardScreenState();
@@ -32,15 +38,25 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
       widget._dashboardRepository ?? DashboardRepository();
   late final AuthRepository _authRepository =
       widget._authRepository ?? AuthRepository();
+  late final SessionStorage _sessionStorage =
+      widget._sessionStorage ?? SessionStorage();
 
   DashboardResponse? _dashboard;
   String? _errorMessage;
   bool _isLoading = true;
+  AppUser? _currentUser;
 
   @override
   void initState() {
     super.initState();
+    _loadCurrentUser();
     _loadDashboard();
+  }
+
+  Future<void> _loadCurrentUser() async {
+    final user = await _sessionStorage.getUser();
+    if (!mounted) return;
+    setState(() => _currentUser = user);
   }
 
   Future<void> _loadDashboard() async {
@@ -110,6 +126,11 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
     }
 
     final dashboard = _dashboard;
+    final roles = _currentUser?.roles ?? const <String>[];
+    final canUpdateNamazTime = PermissionHelper.canUpdateNamazTime(roles);
+    final canManageAnnouncements = PermissionHelper.canManageAnnouncements(roles);
+    final canManageFinance = PermissionHelper.canManageFinance(roles);
+    final canManageProjects = PermissionHelper.canManageProjects(roles);
     if (dashboard == null) {
       return _DashboardErrorView(
         message: 'Unable to load dashboard',
@@ -136,34 +157,65 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                   ),
                   const SizedBox(height: 12),
                   NamazTimeCard(namazTime: dashboard.namazTime),
-                  const SizedBox(height: 8),
-                  AppButton(
-                    label: 'Update Namaz Time',
-                    isOutlined: true,
-                    onPressed: () async {
-                      await context.push(
-                        '/namaz-time/update',
-                        extra: <String, dynamic>{
-                          'masjidId': dashboard.masjid?.id,
-                        },
-                      );
-                      if (mounted) await _loadDashboard();
-                    },
-                  ),
+                  if (canUpdateNamazTime) ...<Widget>[
+                    const SizedBox(height: 8),
+                    AppButton(
+                      label: 'Update Namaz Time',
+                      isOutlined: true,
+                      onPressed: () async {
+                        await context.push(
+                          '/namaz-time/update',
+                          extra: <String, dynamic>{
+                            'masjidId': dashboard.masjid?.id,
+                          },
+                        );
+                        if (mounted) await _loadDashboard();
+                      },
+                    ),
+                  ],
                   const SizedBox(height: 12),
                   AnnouncementPreviewCard(
                     announcements: dashboard.latestAnnouncements,
                     onViewAll: () => context.push('/announcements'),
-                    onAddAnnouncement: () => context.push('/announcements/add'),
+                    onAddAnnouncement: canManageAnnouncements
+                        ? () => context.push('/announcements/add')
+                        : null,
                   ),
                   const SizedBox(height: 12),
                   FinanceSummaryCard(
                     financeSummary: dashboard.financeSummary,
                   ),
+                  if (canManageFinance) ...<Widget>[
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: <Widget>[
+                        FilledButton.icon(
+                          onPressed: () => context.push('/finance/add-collection'),
+                          icon: const Icon(Icons.add),
+                          label: const Text('Add Collection'),
+                        ),
+                        FilledButton.icon(
+                          onPressed: () => context.push('/finance/add-expense'),
+                          icon: const Icon(Icons.remove),
+                          label: const Text('Add Expense'),
+                        ),
+                      ],
+                    ),
+                  ],
                   const SizedBox(height: 12),
                   ProjectSummaryCard(
                     projectsSummary: dashboard.projectsSummary,
                   ),
+                  if (canManageProjects) ...<Widget>[
+                    const SizedBox(height: 8),
+                    AppButton(
+                      label: 'Add Project',
+                      isOutlined: true,
+                      onPressed: () => context.push('/projects/add'),
+                    ),
+                  ],
                   const SizedBox(height: 12),
                   ImamSalaryCard(
                     salarySummary: dashboard.imamSalarySummary,

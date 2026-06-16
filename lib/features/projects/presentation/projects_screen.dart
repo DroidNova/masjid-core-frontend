@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:platform_core_frontend/core/permissions/permission_helper.dart';
+import 'package:platform_core_frontend/core/storage/session_storage.dart';
 import 'package:platform_core_frontend/features/auth/data/auth_repository.dart';
+import 'package:platform_core_frontend/features/auth/data/models/app_user.dart';
 import 'package:platform_core_frontend/features/projects/data/models/project_model.dart';
 import 'package:platform_core_frontend/features/projects/data/projects_repository.dart';
 import 'package:platform_core_frontend/features/projects/presentation/widgets/project_card.dart';
@@ -13,11 +16,14 @@ class ProjectsScreen extends StatefulWidget {
     super.key,
     ProjectsRepository? projectsRepository,
     AuthRepository? authRepository,
+    SessionStorage? sessionStorage,
   })  : _projectsRepository = projectsRepository,
-        _authRepository = authRepository;
+        _authRepository = authRepository,
+        _sessionStorage = sessionStorage;
 
   final ProjectsRepository? _projectsRepository;
   final AuthRepository? _authRepository;
+  final SessionStorage? _sessionStorage;
 
   @override
   State<ProjectsScreen> createState() => _ProjectsScreenState();
@@ -28,16 +34,26 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
       widget._projectsRepository ?? ProjectsRepository();
   late final AuthRepository _authRepository =
       widget._authRepository ?? AuthRepository();
+  late final SessionStorage _sessionStorage =
+      widget._sessionStorage ?? SessionStorage();
 
   List<ProjectModel> _projects = <ProjectModel>[];
   String _selectedFilter = 'ALL';
   String? _errorMessage;
   bool _isLoading = true;
+  AppUser? _currentUser;
 
   @override
   void initState() {
     super.initState();
+    _loadCurrentUser();
     _loadProjects();
+  }
+
+  Future<void> _loadCurrentUser() async {
+    final user = await _sessionStorage.getUser();
+    if (!mounted) return;
+    setState(() => _currentUser = user);
   }
 
   Future<void> _loadProjects() async {
@@ -130,6 +146,9 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
     }
 
     final visibleProjects = _filteredProjects;
+    final canManageProjects = PermissionHelper.canManageProjects(
+      _currentUser?.roles ?? const <String>[],
+    );
 
     return SafeArea(
       child: RefreshIndicator(
@@ -153,8 +172,10 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                     const SizedBox(height: 6),
                     const Text('Track masjid construction and repair work'),
                     const SizedBox(height: 16),
-                    AppButton(label: 'Add Project', onPressed: _openAddProject),
-                    const SizedBox(height: 16),
+                    if (canManageProjects) ...<Widget>[
+                      AppButton(label: 'Add Project', onPressed: _openAddProject),
+                      const SizedBox(height: 16),
+                    ],
                     Wrap(
                       spacing: 8,
                       children: <Widget>[

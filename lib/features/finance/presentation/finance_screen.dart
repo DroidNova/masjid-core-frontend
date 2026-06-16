@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:platform_core_frontend/core/permissions/permission_helper.dart';
+import 'package:platform_core_frontend/core/storage/session_storage.dart';
 import 'package:platform_core_frontend/features/auth/data/auth_repository.dart';
+import 'package:platform_core_frontend/features/auth/data/models/app_user.dart';
 import 'package:platform_core_frontend/features/finance/data/finance_repository.dart';
 import 'package:platform_core_frontend/features/finance/data/models/collection_entry_model.dart';
 import 'package:platform_core_frontend/features/finance/data/models/expense_entry_model.dart';
@@ -16,11 +19,14 @@ class FinanceScreen extends StatefulWidget {
     super.key,
     FinanceRepository? financeRepository,
     AuthRepository? authRepository,
+    SessionStorage? sessionStorage,
   })  : _financeRepository = financeRepository,
-        _authRepository = authRepository;
+        _authRepository = authRepository,
+        _sessionStorage = sessionStorage;
 
   final FinanceRepository? _financeRepository;
   final AuthRepository? _authRepository;
+  final SessionStorage? _sessionStorage;
 
   @override
   State<FinanceScreen> createState() => _FinanceScreenState();
@@ -31,6 +37,8 @@ class _FinanceScreenState extends State<FinanceScreen> {
       widget._financeRepository ?? FinanceRepository();
   late final AuthRepository _authRepository =
       widget._authRepository ?? AuthRepository();
+  late final SessionStorage _sessionStorage =
+      widget._sessionStorage ?? SessionStorage();
 
   FinanceSummaryModel _summary = FinanceSummaryModel.empty();
   List<CollectionEntryModel> _collections = <CollectionEntryModel>[];
@@ -38,11 +46,19 @@ class _FinanceScreenState extends State<FinanceScreen> {
   String? _errorMessage;
   bool _isLoading = true;
   int _selectedTab = 0;
+  AppUser? _currentUser;
 
   @override
   void initState() {
     super.initState();
+    _loadCurrentUser();
     _loadFinanceData();
+  }
+
+  Future<void> _loadCurrentUser() async {
+    final user = await _sessionStorage.getUser();
+    if (!mounted) return;
+    setState(() => _currentUser = user);
   }
 
   Future<void> _loadFinanceData() async {
@@ -149,6 +165,9 @@ class _FinanceScreenState extends State<FinanceScreen> {
       );
     }
 
+    final roles = _currentUser?.roles ?? const <String>[];
+    final canManageFinance = PermissionHelper.canManageFinance(roles);
+
     return SafeArea(
       child: RefreshIndicator(
         onRefresh: _refreshFinanceData,
@@ -163,7 +182,11 @@ class _FinanceScreenState extends State<FinanceScreen> {
                 children: <Widget>[
                   FinanceSummaryCard(summary: _summary),
                   const SizedBox(height: 12),
-                  const _ImamSalaryNavigationCard(),
+                  _ImamSalaryNavigationCard(
+                    subtitle: PermissionHelper.canManageImamSalary(roles)
+                        ? 'Manage salary paid/unpaid records'
+                        : 'View salary paid/unpaid records',
+                  ),
                   const SizedBox(height: 12),
                   SegmentedButton<int>(
                     segments: const <ButtonSegment<int>>[
@@ -186,7 +209,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
                     _FinanceEntriesSection(
                       title: 'Collections',
                       buttonLabel: 'Add Collection',
-                      onAddPressed: _openAddCollection,
+                      onAddPressed: canManageFinance ? _openAddCollection : null,
                       emptyMessage: 'No collections added yet.',
                       children: _collections
                           .map(
@@ -206,7 +229,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
                     _FinanceEntriesSection(
                       title: 'Expenses',
                       buttonLabel: 'Add Expense',
-                      onAddPressed: _openAddExpense,
+                      onAddPressed: canManageFinance ? _openAddExpense : null,
                       emptyMessage: 'No expenses added yet.',
                       children: _expenses
                           .map(
@@ -234,7 +257,9 @@ class _FinanceScreenState extends State<FinanceScreen> {
 
 
 class _ImamSalaryNavigationCard extends StatelessWidget {
-  const _ImamSalaryNavigationCard();
+  const _ImamSalaryNavigationCard({required this.subtitle});
+
+  final String subtitle;
 
   @override
   Widget build(BuildContext context) {
@@ -263,7 +288,7 @@ class _ImamSalaryNavigationCard extends StatelessWidget {
                           ),
                     ),
                     const SizedBox(height: 4),
-                    const Text('Manage salary paid/unpaid records'),
+                    Text(subtitle),
                   ],
                 ),
               ),
@@ -280,14 +305,14 @@ class _FinanceEntriesSection extends StatelessWidget {
   const _FinanceEntriesSection({
     required this.title,
     required this.buttonLabel,
-    required this.onAddPressed,
+    this.onAddPressed,
     required this.emptyMessage,
     required this.children,
   });
 
   final String title;
   final String buttonLabel;
-  final VoidCallback onAddPressed;
+  final VoidCallback? onAddPressed;
   final String emptyMessage;
   final List<Widget> children;
 
@@ -309,10 +334,11 @@ class _FinanceEntriesSection extends StatelessWidget {
                         ),
                   ),
                 ),
-                FilledButton(
-                  onPressed: onAddPressed,
-                  child: Text(buttonLabel),
-                ),
+                if (onAddPressed != null)
+                  FilledButton(
+                    onPressed: onAddPressed,
+                    child: Text(buttonLabel),
+                  ),
               ],
             ),
             const SizedBox(height: 12),

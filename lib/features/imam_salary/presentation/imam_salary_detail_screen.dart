@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:platform_core_frontend/core/permissions/permission_helper.dart';
+import 'package:platform_core_frontend/core/storage/session_storage.dart';
 import 'package:platform_core_frontend/features/finance/presentation/widgets/finance_labels.dart';
 import 'package:platform_core_frontend/features/imam_salary/data/imam_salary_repository.dart';
 import 'package:platform_core_frontend/features/imam_salary/models/imam_salary_model.dart';
@@ -13,11 +15,14 @@ class ImamSalaryDetailScreen extends StatefulWidget {
     required this.salaryId,
     this.initialSalary,
     ImamSalaryRepository? imamSalaryRepository,
-  }) : _imamSalaryRepository = imamSalaryRepository;
+    SessionStorage? sessionStorage,
+  })  : _imamSalaryRepository = imamSalaryRepository,
+        _sessionStorage = sessionStorage;
 
   final String salaryId;
   final ImamSalaryModel? initialSalary;
   final ImamSalaryRepository? _imamSalaryRepository;
+  final SessionStorage? _sessionStorage;
 
   @override
   State<ImamSalaryDetailScreen> createState() => _ImamSalaryDetailScreenState();
@@ -26,20 +31,34 @@ class ImamSalaryDetailScreen extends StatefulWidget {
 class _ImamSalaryDetailScreenState extends State<ImamSalaryDetailScreen> {
   late final ImamSalaryRepository _imamSalaryRepository =
       widget._imamSalaryRepository ?? ImamSalaryRepository();
+  late final SessionStorage _sessionStorage =
+      widget._sessionStorage ?? SessionStorage();
 
   ImamSalaryModel? _salary;
   String? _errorMessage;
   bool _isLoading = true;
   bool _isDeleting = false;
+  bool _canManageImamSalary = false;
 
   @override
   void initState() {
     super.initState();
+    _loadPermissions();
     if (widget.initialSalary != null) {
       _salary = widget.initialSalary;
       _isLoading = false;
     }
     _loadSalary();
+  }
+
+  Future<void> _loadPermissions() async {
+    final user = await _sessionStorage.getUser();
+    if (!mounted) return;
+    setState(() {
+      _canManageImamSalary = PermissionHelper.canManageImamSalary(
+        user?.roles ?? const <String>[],
+      );
+    });
   }
 
   Future<void> _loadSalary() async {
@@ -220,18 +239,20 @@ class _ImamSalaryDetailScreenState extends State<ImamSalaryDetailScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  AppButton(
-                    label: 'Edit',
-                    onPressed: () => _openEdit(salary),
-                  ),
-                  const SizedBox(height: 12),
-                  AppButton(
-                    label: 'Delete',
-                    isOutlined: true,
-                    isLoading: _isDeleting,
-                    onPressed: _confirmDelete,
-                  ),
+                  if (_canManageImamSalary) ...<Widget>[
+                    const SizedBox(height: 16),
+                    AppButton(
+                      label: 'Edit',
+                      onPressed: () => _openEdit(salary),
+                    ),
+                    const SizedBox(height: 12),
+                    AppButton(
+                      label: 'Delete',
+                      isOutlined: true,
+                      isLoading: _isDeleting,
+                      onPressed: _confirmDelete,
+                    ),
+                  ],
                 ],
               ),
             ),

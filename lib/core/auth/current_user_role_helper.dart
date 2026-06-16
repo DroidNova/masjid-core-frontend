@@ -1,3 +1,4 @@
+import 'package:platform_core_frontend/core/permissions/permission_helper.dart';
 import 'package:platform_core_frontend/features/auth/data/models/app_user.dart';
 
 class CurrentUserRoleHelper {
@@ -10,24 +11,15 @@ class CurrentUserRoleHelper {
   static const String member = 'MEMBER';
 
   static bool hasRole(AppUser user, String role) {
-    return user.roles.map((value) => value.toUpperCase()).contains(role);
+    return PermissionHelper.hasRole(user, role);
   }
 
   static bool canAddUsers(AppUser user) {
-    return allowedRolesToCreate(user).isNotEmpty;
+    return PermissionHelper.canAddCommunityUser(user.roles);
   }
 
   static List<String> allowedRolesToCreate(AppUser user) {
-    if (hasRole(user, superAdmin)) {
-      return const <String>[imam, committeeMember];
-    }
-    if (hasRole(user, masjidAdmin)) {
-      return const <String>[imam, committeeMember];
-    }
-    if (hasRole(user, committeeMember)) {
-      return const <String>[member];
-    }
-    return const <String>[];
+    return PermissionHelper.allowedCommunityRolesToCreate(user.roles);
   }
 
   static String roleLabel(String role) {

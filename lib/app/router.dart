@@ -86,15 +86,24 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: '/community/add-user',
-      builder: (context, state) => const AddCommunityUserScreen(),
+      builder: (context, state) => _RoleGuard(
+        isAllowed: PermissionHelper.canAddCommunityUser,
+        child: const AddCommunityUserScreen(),
+      ),
     ),
     GoRoute(
       path: '/finance/add-collection',
-      builder: (context, state) => const AddCollectionScreen(),
+      builder: (context, state) => _RoleGuard(
+        isAllowed: PermissionHelper.canManageFinance,
+        child: const AddCollectionScreen(),
+      ),
     ),
     GoRoute(
       path: '/finance/add-expense',
-      builder: (context, state) => const AddExpenseScreen(),
+      builder: (context, state) => _RoleGuard(
+        isAllowed: PermissionHelper.canManageFinance,
+        child: const AddExpenseScreen(),
+      ),
     ),
 
     GoRoute(
@@ -103,7 +112,10 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: '/imam-salaries/add',
-      builder: (context, state) => const AddImamSalaryScreen(),
+      builder: (context, state) => _RoleGuard(
+        isAllowed: PermissionHelper.canManageImamSalary,
+        child: const AddImamSalaryScreen(),
+      ),
     ),
     GoRoute(
       path: '/imam-salaries/:id/edit',
@@ -111,9 +123,12 @@ final GoRouter appRouter = GoRouter(
         final salaryId = state.pathParameters['id'] ?? '';
         final extra = state.extra;
         final salary = extra is ImamSalaryModel ? extra : null;
-        return EditImamSalaryScreen(
-          salaryId: salaryId,
-          initialSalary: salary,
+        return _RoleGuard(
+          isAllowed: PermissionHelper.canManageImamSalary,
+          child: EditImamSalaryScreen(
+            salaryId: salaryId,
+            initialSalary: salary,
+          ),
         );
       },
     ),
@@ -136,7 +151,10 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: '/announcements/add',
-      builder: (context, state) => const AddAnnouncementScreen(),
+      builder: (context, state) => _RoleGuard(
+        isAllowed: PermissionHelper.canManageAnnouncements,
+        child: const AddAnnouncementScreen(),
+      ),
     ),
     GoRoute(
       path: '/announcements/:id/edit',
@@ -144,9 +162,12 @@ final GoRouter appRouter = GoRouter(
         final announcementId = state.pathParameters['id'] ?? '';
         final extra = state.extra;
         final announcement = extra is AnnouncementModel ? extra : null;
-        return EditAnnouncementScreen(
-          announcementId: announcementId,
-          announcement: announcement,
+        return _RoleGuard(
+          isAllowed: PermissionHelper.canManageAnnouncements,
+          child: EditAnnouncementScreen(
+            announcementId: announcementId,
+            announcement: announcement,
+          ),
         );
       },
     ),
@@ -158,12 +179,18 @@ final GoRouter appRouter = GoRouter(
         if (extra is Map<String, dynamic>) {
           masjidId = extra['masjidId']?.toString();
         }
-        return UpdateNamazTimeScreen(masjidId: masjidId);
+        return _RoleGuard(
+          isAllowed: PermissionHelper.canUpdateNamazTime,
+          child: UpdateNamazTimeScreen(masjidId: masjidId),
+        );
       },
     ),
     GoRoute(
       path: '/projects/add',
-      builder: (context, state) => const AddProjectScreen(),
+      builder: (context, state) => _RoleGuard(
+        isAllowed: PermissionHelper.canManageProjects,
+        child: const AddProjectScreen(),
+      ),
     ),
     GoRoute(
       path: '/projects/:id/edit',
@@ -171,9 +198,12 @@ final GoRouter appRouter = GoRouter(
         final projectId = state.pathParameters['id'] ?? '';
         final extra = state.extra;
         final project = extra is ProjectModel ? extra : null;
-        return EditProjectScreen(
-          projectId: projectId,
-          initialProject: project,
+        return _RoleGuard(
+          isAllowed: PermissionHelper.canManageProjects,
+          child: EditProjectScreen(
+            projectId: projectId,
+            initialProject: project,
+          ),
         );
       },
     ),
@@ -287,6 +317,31 @@ class _SuperAdminGuard extends StatelessWidget {
         }
         if (!PermissionHelper.isSuperAdmin(user)) {
           return const Scaffold(body: NotAllowedView(message: 'Only SUPER_ADMIN users can access this page.'));
+        }
+        return child;
+      },
+    );
+  }
+}
+
+
+class _RoleGuard extends StatelessWidget {
+  const _RoleGuard({required this.isAllowed, required this.child});
+
+  final bool Function(List<String> roles) isAllowed;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder(
+      future: SessionStorage().getUser(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        }
+        final roles = snapshot.data?.roles ?? const <String>[];
+        if (!isAllowed(roles)) {
+          return const Scaffold(body: NotAllowedView());
         }
         return child;
       },

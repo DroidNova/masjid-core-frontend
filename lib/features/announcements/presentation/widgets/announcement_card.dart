@@ -5,13 +5,13 @@ class AnnouncementCard extends StatelessWidget {
   const AnnouncementCard({
     super.key,
     required this.announcement,
-    required this.onEdit,
-    required this.onDelete,
+    this.onEdit,
+    this.onDelete,
   });
 
   final AnnouncementModel announcement;
-  final VoidCallback onEdit;
-  final VoidCallback onDelete;
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -45,21 +45,25 @@ class AnnouncementCard extends StatelessWidget {
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ],
-            const SizedBox(height: 12),
-            Row(
-              children: <Widget>[
-                TextButton.icon(
-                  onPressed: onEdit,
-                  icon: const Icon(Icons.edit_outlined),
-                  label: const Text('Edit'),
-                ),
-                TextButton.icon(
-                  onPressed: onDelete,
-                  icon: const Icon(Icons.delete_outline),
-                  label: const Text('Delete'),
-                ),
-              ],
-            ),
+            if (onEdit != null || onDelete != null) ...<Widget>[
+              const SizedBox(height: 12),
+              Row(
+                children: <Widget>[
+                  if (onEdit != null)
+                    TextButton.icon(
+                      onPressed: onEdit,
+                      icon: const Icon(Icons.edit_outlined),
+                      label: const Text('Edit'),
+                    ),
+                  if (onDelete != null)
+                    TextButton.icon(
+                      onPressed: onDelete,
+                      icon: const Icon(Icons.delete_outline),
+                      label: const Text('Delete'),
+                    ),
+                ],
+              ),
+            ],
           ],
         ),
       ),
