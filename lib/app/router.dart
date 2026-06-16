@@ -1,5 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:platform_core_frontend/core/permissions/permission_helper.dart';
+import 'package:platform_core_frontend/core/storage/session_storage.dart';
+import 'package:platform_core_frontend/features/super_admin/models/admin_masjid_model.dart';
+import 'package:platform_core_frontend/features/super_admin/models/admin_masjid_request_model.dart';
+import 'package:platform_core_frontend/features/super_admin/models/admin_user_model.dart';
+import 'package:platform_core_frontend/features/super_admin/presentation/masjid_requests/admin_masjid_request_detail_screen.dart';
+import 'package:platform_core_frontend/features/super_admin/presentation/masjids/admin_masjid_detail_screen.dart';
+import 'package:platform_core_frontend/features/super_admin/presentation/super_admin_shell_screen.dart';
+import 'package:platform_core_frontend/features/super_admin/presentation/users/admin_user_detail_screen.dart';
+import 'package:platform_core_frontend/shared/widgets/not_allowed_view.dart';
 import 'package:platform_core_frontend/features/announcements/data/models/announcement_model.dart';
 import 'package:platform_core_frontend/features/announcements/presentation/add_announcement_screen.dart';
 import 'package:platform_core_frontend/features/announcements/presentation/announcements_screen.dart';
@@ -179,6 +189,35 @@ final GoRouter appRouter = GoRouter(
         );
       },
     ),
+
+    GoRoute(
+      path: '/super-admin',
+      builder: (context, state) => const _SuperAdminGuard(child: SuperAdminShellScreen()),
+    ),
+    GoRoute(
+      path: '/super-admin/requests',
+      builder: (context, state) => const _SuperAdminGuard(child: SuperAdminShellScreen(initialIndex: 1)),
+    ),
+    GoRoute(
+      path: '/super-admin/requests/:id',
+      builder: (context, state) => _SuperAdminGuard(child: AdminMasjidRequestDetailScreen(id: state.pathParameters['id'] ?? '', initial: state.extra is AdminMasjidRequestModel ? state.extra as AdminMasjidRequestModel : null)),
+    ),
+    GoRoute(
+      path: '/super-admin/masjids',
+      builder: (context, state) => const _SuperAdminGuard(child: SuperAdminShellScreen(initialIndex: 2)),
+    ),
+    GoRoute(
+      path: '/super-admin/masjids/:id',
+      builder: (context, state) => _SuperAdminGuard(child: AdminMasjidDetailScreen(id: state.pathParameters['id'] ?? '', initial: state.extra is AdminMasjidModel ? state.extra as AdminMasjidModel : null)),
+    ),
+    GoRoute(
+      path: '/super-admin/users',
+      builder: (context, state) => const _SuperAdminGuard(child: SuperAdminShellScreen(initialIndex: 3)),
+    ),
+    GoRoute(
+      path: '/super-admin/users/:id',
+      builder: (context, state) => _SuperAdminGuard(child: AdminUserDetailScreen(id: state.pathParameters['id'] ?? '', initial: state.extra is AdminUserModel ? state.extra as AdminUserModel : null)),
+    ),
     GoRoute(
       path: '/main',
       builder: (context, state) => const MainShellScreen(),
@@ -224,6 +263,33 @@ class _MissingLoginDataScreen extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+
+class _SuperAdminGuard extends StatelessWidget {
+  const _SuperAdminGuard({required this.child});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder(
+      future: SessionStorage().getUser(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        }
+        final user = snapshot.data;
+        if (user == null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) => context.go('/auth'));
+          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        }
+        if (!PermissionHelper.isSuperAdmin(user)) {
+          return const Scaffold(body: NotAllowedView(message: 'Only SUPER_ADMIN users can access this page.'));
+        }
+        return child;
+      },
     );
   }
 }

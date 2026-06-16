@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:platform_core_frontend/core/permissions/permission_helper.dart';
 import 'package:platform_core_frontend/features/auth/data/auth_repository.dart';
 import 'package:platform_core_frontend/shared/widgets/app_button.dart';
 import 'package:platform_core_frontend/shared/widgets/app_text_field.dart';
@@ -48,11 +49,11 @@ class _OtpScreenState extends State<OtpScreen> {
     setState(() => _isLoading = true);
 
     try {
-      await _authRepository.verifyOtp(widget.phone, widget.challengeId, otp);
+      final session = await _authRepository.verifyOtp(widget.phone, widget.challengeId, otp);
 
       if (!mounted) return;
 
-      context.go('/main');
+      context.go(PermissionHelper.isSuperAdmin(session.user) ? '/super-admin' : '/main');
     } catch (error) {
       if (mounted) _showError(_cleanError(error));
     } finally {

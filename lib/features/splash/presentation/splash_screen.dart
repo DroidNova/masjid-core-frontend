@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:platform_core_frontend/core/permissions/permission_helper.dart';
+import 'package:platform_core_frontend/core/storage/session_storage.dart';
 import 'package:platform_core_frontend/core/storage/token_storage.dart';
 import 'package:platform_core_frontend/features/auth/data/auth_repository.dart';
 import 'package:platform_core_frontend/shared/widgets/loading_view.dart';
@@ -9,11 +11,14 @@ class SplashScreen extends StatefulWidget {
     super.key,
     TokenStorage? tokenStorage,
     AuthRepository? authRepository,
+    SessionStorage? sessionStorage,
   })  : _tokenStorage = tokenStorage,
-        _authRepository = authRepository;
+        _authRepository = authRepository,
+        _sessionStorage = sessionStorage;
 
   final TokenStorage? _tokenStorage;
   final AuthRepository? _authRepository;
+  final SessionStorage? _sessionStorage;
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -23,6 +28,8 @@ class _SplashScreenState extends State<SplashScreen> {
   late final TokenStorage _tokenStorage = widget._tokenStorage ?? TokenStorage();
   late final AuthRepository _authRepository =
       widget._authRepository ?? AuthRepository();
+  late final SessionStorage _sessionStorage =
+      widget._sessionStorage ?? SessionStorage();
 
   @override
   void initState() {
@@ -35,7 +42,8 @@ class _SplashScreenState extends State<SplashScreen> {
 
     final hasAccessToken = await _tokenStorage.hasAccessToken();
     if (hasAccessToken) {
-      if (mounted) context.go('/main');
+      final user = await _sessionStorage.getUser();
+      if (mounted) context.go(PermissionHelper.isSuperAdmin(user) ? '/super-admin' : '/main');
       return;
     }
 
@@ -43,7 +51,8 @@ class _SplashScreenState extends State<SplashScreen> {
     if (refreshToken != null && refreshToken.isNotEmpty) {
       try {
         await _authRepository.refreshSession();
-        if (mounted) context.go('/main');
+        final user = await _sessionStorage.getUser();
+        if (mounted) context.go(PermissionHelper.isSuperAdmin(user) ? '/super-admin' : '/main');
         return;
       } catch (_) {
         await _authRepository.clearLocalSession();
