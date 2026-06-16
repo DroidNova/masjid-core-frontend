@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:platform_core_frontend/core/network/api_client.dart';
 import 'package:platform_core_frontend/features/community/data/models/community_user_model.dart';
+import 'package:platform_core_frontend/features/community/data/models/create_community_user_request.dart';
 import 'package:platform_core_frontend/features/community/data/models/masjid_detail_model.dart';
 
 class CommunityApi {
@@ -29,9 +30,51 @@ class CommunityApi {
     }
   }
 
+  Future<CommunityUserModel> createMasjidUser(
+    CreateCommunityUserRequest request,
+  ) async {
+    try {
+      final response = await _apiClient.dio.post<Object?>(
+        '/masjids/my/users',
+        data: request.toJson(),
+      );
+      final userData = _extractCreatedUserData(response.data);
+      return CommunityUserModel.fromJson(userData);
+    } on DioException catch (error) {
+      throw Exception(_readDioErrorMessage(error));
+    }
+  }
+
   Map<String, dynamic> _extractMapData(Object? responseData) {
     final data = _unwrapData(responseData);
     if (data is Map<String, dynamic>) return data;
+    return <String, dynamic>{};
+  }
+
+  Map<String, dynamic> _extractCreatedUserData(Object? responseData) {
+    final data = _unwrapData(responseData);
+    final responseMap = responseData is Map<String, dynamic>
+        ? responseData
+        : const <String, dynamic>{};
+
+    if (data is Map<String, dynamic>) {
+      final user = data['user'];
+      final userMap = user is Map<String, dynamic>
+          ? Map<String, dynamic>.from(user)
+          : Map<String, dynamic>.from(data);
+
+      final wrapperMessage = responseMap['message'];
+      if (wrapperMessage is String && !userMap.containsKey('message')) {
+        userMap['message'] = wrapperMessage;
+      }
+      final temporaryPassword = data['temporaryPassword'];
+      if (temporaryPassword != null &&
+          !userMap.containsKey('temporaryPassword')) {
+        userMap['temporaryPassword'] = temporaryPassword;
+      }
+      return userMap;
+    }
+
     return <String, dynamic>{};
   }
 

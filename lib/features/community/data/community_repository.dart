@@ -1,5 +1,6 @@
 import 'package:platform_core_frontend/features/community/data/community_api.dart';
 import 'package:platform_core_frontend/features/community/data/models/community_user_model.dart';
+import 'package:platform_core_frontend/features/community/data/models/create_community_user_request.dart';
 import 'package:platform_core_frontend/features/community/data/models/masjid_detail_model.dart';
 
 class CommunityRepository {
@@ -12,5 +13,11 @@ class CommunityRepository {
 
   Future<List<CommunityUserModel>> getMyMasjidUsers() {
     return _communityApi.getMyMasjidUsers();
+  }
+
+  Future<CommunityUserModel> createMasjidUser(
+    CreateCommunityUserRequest request,
+  ) {
+    return _communityApi.createMasjidUser(request);
   }
 }

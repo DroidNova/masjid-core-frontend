@@ -7,6 +7,8 @@ class CommunityUserModel {
     this.phone,
     this.status,
     this.masjidId,
+    this.message,
+    this.temporaryPassword,
     this.createdAt,
     this.updatedAt,
   });
@@ -19,6 +21,8 @@ class CommunityUserModel {
       phone: _optionalString(json['phone']),
       status: _optionalString(json['status']),
       masjidId: _optionalString(json['masjidId']),
+      message: _optionalString(json['message']),
+      temporaryPassword: _optionalString(json['temporaryPassword']),
       roles: (json['roles'] as List<dynamic>? ?? const <dynamic>[])
           .map((role) => role.toString())
           .toList(),
@@ -33,6 +37,8 @@ class CommunityUserModel {
   final String? phone;
   final String? status;
   final String? masjidId;
+  final String? message;
+  final String? temporaryPassword;
   final List<String> roles;
   final String? createdAt;
   final String? updatedAt;

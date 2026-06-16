@@ -8,6 +8,7 @@ import 'package:platform_core_frontend/features/auth/presentation/auth_landing_s
 import 'package:platform_core_frontend/features/auth/presentation/login_password_screen.dart';
 import 'package:platform_core_frontend/features/auth/presentation/login_phone_screen.dart';
 import 'package:platform_core_frontend/features/auth/presentation/otp_screen.dart';
+import 'package:platform_core_frontend/features/community/presentation/add_community_user_screen.dart';
 import 'package:platform_core_frontend/features/finance/presentation/add_collection_screen.dart';
 import 'package:platform_core_frontend/features/finance/presentation/add_expense_screen.dart';
 import 'package:platform_core_frontend/features/imam_salary/models/imam_salary_model.dart';
@@ -72,6 +73,10 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/masjid-request',
       builder: (context, state) => const MasjidRequestFormScreen(),
+    ),
+    GoRoute(
+      path: '/community/add-user',
+      builder: (context, state) => const AddCommunityUserScreen(),
     ),
     GoRoute(
       path: '/finance/add-collection',
