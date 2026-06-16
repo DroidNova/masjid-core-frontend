@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:platform_core_frontend/core/errors/error_message_helper.dart';
 import 'package:platform_core_frontend/features/projects/data/models/create_project_request.dart';
 import 'package:platform_core_frontend/features/projects/data/projects_repository.dart';
 import 'package:platform_core_frontend/features/projects/presentation/widgets/project_status_chip.dart';
@@ -65,7 +66,7 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
       );
       context.pop(true);
     } catch (error) {
-      if (mounted) _showError(_cleanError(error));
+      if (mounted) _showError(getReadableErrorMessage(error));
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
@@ -93,9 +94,6 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
-  String _cleanError(Object error) {
-    return error.toString().replaceFirst('Exception: ', '');
-  }
 
   @override
   Widget build(BuildContext context) {

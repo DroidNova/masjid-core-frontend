@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:platform_core_frontend/core/errors/error_message_helper.dart';
 import 'package:platform_core_frontend/core/auth/current_user_role_helper.dart';
 import 'package:platform_core_frontend/core/storage/session_storage.dart';
 import 'package:platform_core_frontend/core/storage/token_storage.dart';
@@ -132,7 +133,7 @@ class _AddCommunityUserScreenState extends State<AddCommunityUserScreen> {
   }
 
   Future<void> _handleError(Object error) async {
-    final message = _friendlyErrorMessage(error);
+    final message = getReadableErrorMessage(error, fallbackMessage: 'Unable to add user.');
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
     );
@@ -143,28 +144,6 @@ class _AddCommunityUserScreenState extends State<AddCommunityUserScreen> {
       await _sessionStorage.clearUser();
       if (mounted) context.go('/auth');
     }
-  }
-
-  String _friendlyErrorMessage(Object error) {
-    final lower = error.toString().toLowerCase();
-    if (lower.contains('unauthorized') || lower.contains('401')) {
-      return 'Session expired. Please login again.';
-    }
-    if (lower.contains('not assigned') && lower.contains('masjid')) {
-      return 'You are not assigned to any masjid yet.';
-    }
-    if (lower.contains('phone') &&
-        (lower.contains('exists') || lower.contains('duplicate'))) {
-      return 'Phone number already exists.';
-    }
-    if (lower.contains('email') &&
-        (lower.contains('exists') || lower.contains('duplicate'))) {
-      return 'Email already exists.';
-    }
-    if (lower.contains('forbidden') || lower.contains('403')) {
-      return 'You are not allowed to add this role.';
-    }
-    return 'Unable to add user.';
   }
 
   bool get _shouldShowMasjidIdField {

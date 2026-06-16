@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:platform_core_frontend/core/errors/error_message_helper.dart';
 import 'package:platform_core_frontend/features/finance/data/finance_repository.dart';
 import 'package:platform_core_frontend/features/finance/data/models/create_collection_request.dart';
 import 'package:platform_core_frontend/features/finance/presentation/widgets/finance_labels.dart';
@@ -60,7 +61,7 @@ class _AddCollectionScreenState extends State<AddCollectionScreen> {
       );
       context.pop(true);
     } catch (error) {
-      if (mounted) _showError(_cleanError(error));
+      if (mounted) _showError(getReadableErrorMessage(error));
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
@@ -79,9 +80,6 @@ class _AddCollectionScreenState extends State<AddCollectionScreen> {
     );
   }
 
-  String _cleanError(Object error) {
-    return error.toString().replaceFirst('Exception: ', '');
-  }
 
   @override
   Widget build(BuildContext context) {
