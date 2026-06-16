@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:platform_core_frontend/core/permissions/permission_helper.dart';
+import 'package:platform_core_frontend/core/storage/session_storage.dart';
 import 'package:platform_core_frontend/features/community/presentation/community_screen.dart';
 import 'package:platform_core_frontend/features/dashboard/presentation/home_dashboard_screen.dart';
 import 'package:platform_core_frontend/features/finance/presentation/finance_screen.dart';
@@ -6,7 +9,10 @@ import 'package:platform_core_frontend/features/projects/presentation/projects_s
 import 'package:platform_core_frontend/shared/widgets/logout_button.dart';
 
 class MainShellScreen extends StatefulWidget {
-  const MainShellScreen({super.key});
+  const MainShellScreen({super.key, SessionStorage? sessionStorage})
+      : _sessionStorage = sessionStorage;
+
+  final SessionStorage? _sessionStorage;
 
   @override
   State<MainShellScreen> createState() => _MainShellScreenState();
@@ -14,6 +20,20 @@ class MainShellScreen extends StatefulWidget {
 
 class _MainShellScreenState extends State<MainShellScreen> {
   int _selectedIndex = 0;
+  late final SessionStorage _sessionStorage =
+      widget._sessionStorage ?? SessionStorage();
+
+  @override
+  void initState() {
+    super.initState();
+    _redirectSuperAdmin();
+  }
+
+  Future<void> _redirectSuperAdmin() async {
+    final user = await _sessionStorage.getUser();
+    if (!mounted) return;
+    if (PermissionHelper.isSuperAdmin(user)) context.go('/super-admin');
+  }
 
   static const List<_MainTab> _tabs = <_MainTab>[
     _MainTab(label: 'Home', icon: Icons.home_outlined),

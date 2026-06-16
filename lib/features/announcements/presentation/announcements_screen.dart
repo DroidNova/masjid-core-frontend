@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:platform_core_frontend/core/permissions/permission_helper.dart';
+import 'package:platform_core_frontend/core/storage/session_storage.dart';
 import 'package:platform_core_frontend/features/announcements/data/announcements_repository.dart';
 import 'package:platform_core_frontend/features/announcements/data/models/announcement_model.dart';
 import 'package:platform_core_frontend/features/announcements/presentation/widgets/announcement_card.dart';
 import 'package:platform_core_frontend/features/announcements/presentation/widgets/announcement_empty_view.dart';
 import 'package:platform_core_frontend/features/auth/data/auth_repository.dart';
+import 'package:platform_core_frontend/features/auth/data/models/app_user.dart';
 import 'package:platform_core_frontend/shared/widgets/app_button.dart';
 import 'package:platform_core_frontend/shared/widgets/loading_view.dart';
 
@@ -13,11 +16,14 @@ class AnnouncementsScreen extends StatefulWidget {
     super.key,
     AnnouncementsRepository? announcementsRepository,
     AuthRepository? authRepository,
+    SessionStorage? sessionStorage,
   })  : _announcementsRepository = announcementsRepository,
-        _authRepository = authRepository;
+        _authRepository = authRepository,
+        _sessionStorage = sessionStorage;
 
   final AnnouncementsRepository? _announcementsRepository;
   final AuthRepository? _authRepository;
+  final SessionStorage? _sessionStorage;
 
   @override
   State<AnnouncementsScreen> createState() => _AnnouncementsScreenState();
@@ -28,15 +34,25 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
       widget._announcementsRepository ?? AnnouncementsRepository();
   late final AuthRepository _authRepository =
       widget._authRepository ?? AuthRepository();
+  late final SessionStorage _sessionStorage =
+      widget._sessionStorage ?? SessionStorage();
 
   List<AnnouncementModel> _announcements = <AnnouncementModel>[];
   String? _errorMessage;
   bool _isLoading = true;
+  AppUser? _currentUser;
 
   @override
   void initState() {
     super.initState();
+    _loadCurrentUser();
     _loadAnnouncements();
+  }
+
+  Future<void> _loadCurrentUser() async {
+    final user = await _sessionStorage.getUser();
+    if (!mounted) return;
+    setState(() => _currentUser = user);
   }
 
   Future<void> _loadAnnouncements() async {
@@ -162,6 +178,10 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
       );
     }
 
+    final canManageAnnouncements = PermissionHelper.canManageAnnouncements(
+      _currentUser?.roles ?? const <String>[],
+    );
+
     return Scaffold(
       appBar: AppBar(title: const Text('Announcements')),
       body: SafeArea(
@@ -189,19 +209,25 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
                         'Important updates for your masjid community',
                       ),
                       const SizedBox(height: 16),
-                      AppButton(
-                        label: 'Add Announcement',
-                        onPressed: _openAddAnnouncement,
-                      ),
-                      const SizedBox(height: 16),
+                      if (canManageAnnouncements) ...<Widget>[
+                        AppButton(
+                          label: 'Add Announcement',
+                          onPressed: _openAddAnnouncement,
+                        ),
+                        const SizedBox(height: 16),
+                      ],
                       if (_announcements.isEmpty)
                         const AnnouncementEmptyView()
                       else
                         ..._announcements.map(
                           (announcement) => AnnouncementCard(
                             announcement: announcement,
-                            onEdit: () => _openEditAnnouncement(announcement),
-                            onDelete: () => _deleteAnnouncement(announcement),
+                            onEdit: canManageAnnouncements
+                                ? () => _openEditAnnouncement(announcement)
+                                : null,
+                            onDelete: canManageAnnouncements
+                                ? () => _deleteAnnouncement(announcement)
+                                : null,
                           ),
                         ),
                     ],

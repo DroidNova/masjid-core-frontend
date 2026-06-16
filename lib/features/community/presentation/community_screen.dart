@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:platform_core_frontend/core/auth/current_user_role_helper.dart';
+import 'package:platform_core_frontend/core/permissions/permission_helper.dart';
 import 'package:platform_core_frontend/core/storage/session_storage.dart';
 import 'package:platform_core_frontend/features/auth/data/auth_repository.dart';
 import 'package:platform_core_frontend/features/auth/data/models/app_user.dart';
@@ -120,13 +120,21 @@ class _CommunityScreenState extends State<CommunityScreen> {
 
   bool get _canAddUsers {
     final user = _currentUser;
-    return user != null && CurrentUserRoleHelper.canAddUsers(user);
+    return user != null && PermissionHelper.canAddCommunityUser(user.roles);
   }
 
   Future<void> _openAddUser() async {
     await context.push('/community/add-user');
     await _loadCurrentUser();
     await _refreshCommunity();
+  }
+
+  List<String> get _currentUserRoles => _currentUser?.roles ?? const <String>[];
+
+  void _showUnavailableUserAction() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('User edit/status API is not available yet.')),
+    );
   }
 
   List<CommunityUserModel> get _committeeUsers {
@@ -223,18 +231,27 @@ class _CommunityScreenState extends State<CommunityScreen> {
                       title: 'Imam',
                       users: _imamUsers,
                       emptyMessage: 'Imam is not added yet.',
+                      currentUserRoles: _currentUserRoles,
+                      onEditUser: (_) => _showUnavailableUserAction(),
+                      onChangeUserStatus: (_) => _showUnavailableUserAction(),
                     ),
                     const SizedBox(height: 12),
                     CommunitySection(
                       title: 'Committee Members',
                       users: _committeeUsers,
                       emptyMessage: 'No committee members added yet.',
+                      currentUserRoles: _currentUserRoles,
+                      onEditUser: (_) => _showUnavailableUserAction(),
+                      onChangeUserStatus: (_) => _showUnavailableUserAction(),
                     ),
                     const SizedBox(height: 12),
                     CommunitySection(
                       title: 'Members',
                       users: _memberUsers,
                       emptyMessage: 'No members added yet.',
+                      currentUserRoles: _currentUserRoles,
+                      onEditUser: (_) => _showUnavailableUserAction(),
+                      onChangeUserStatus: (_) => _showUnavailableUserAction(),
                     ),
                   ],
                 ),

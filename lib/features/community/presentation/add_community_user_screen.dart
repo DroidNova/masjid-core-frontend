@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:platform_core_frontend/core/errors/error_message_helper.dart';
-import 'package:platform_core_frontend/core/auth/current_user_role_helper.dart';
+import 'package:platform_core_frontend/core/permissions/permission_helper.dart';
 import 'package:platform_core_frontend/core/storage/session_storage.dart';
 import 'package:platform_core_frontend/core/storage/token_storage.dart';
 import 'package:platform_core_frontend/features/auth/data/models/app_user.dart';
@@ -11,6 +11,7 @@ import 'package:platform_core_frontend/features/community/data/models/community_
 import 'package:platform_core_frontend/features/community/presentation/widgets/add_user_role_dropdown.dart';
 import 'package:platform_core_frontend/shared/widgets/app_button.dart';
 import 'package:platform_core_frontend/shared/widgets/loading_view.dart';
+import 'package:platform_core_frontend/shared/widgets/not_allowed_view.dart';
 
 class AddCommunityUserScreen extends StatefulWidget {
   const AddCommunityUserScreen({
@@ -60,7 +61,7 @@ class _AddCommunityUserScreenState extends State<AddCommunityUserScreen> {
     if (!mounted) return;
     final allowedRoles = user == null
         ? const <String>[]
-        : CurrentUserRoleHelper.allowedRolesToCreate(user);
+        : PermissionHelper.allowedCommunityRolesToCreate(user.roles);
     setState(() {
       _currentUser = user;
       _allowedRoles = allowedRoles;
@@ -126,7 +127,7 @@ class _AddCommunityUserScreenState extends State<AddCommunityUserScreen> {
     if (user.temporaryPassword != null && user.temporaryPassword!.isNotEmpty) {
       return 'User added successfully. Temporary password is ${user.temporaryPassword}.';
     }
-    if (_selectedRole == CurrentUserRoleHelper.member) {
+    if (_selectedRole == PermissionHelper.member) {
       return 'Member added successfully. This user can login using phone OTP.';
     }
     return 'User added successfully.';
@@ -149,9 +150,9 @@ class _AddCommunityUserScreenState extends State<AddCommunityUserScreen> {
   bool get _shouldShowMasjidIdField {
     final user = _currentUser;
     if (user == null) return false;
-    return CurrentUserRoleHelper.hasRole(
+    return PermissionHelper.hasRole(
           user,
-          CurrentUserRoleHelper.superAdmin,
+          PermissionHelper.superAdmin,
         ) &&
         (user.masjidId == null || user.masjidId!.trim().isEmpty);
   }
@@ -168,35 +169,11 @@ class _AddCommunityUserScreenState extends State<AddCommunityUserScreen> {
             padding: const EdgeInsets.all(16),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 700),
-              child: _allowedRoles.isEmpty ? _notAllowedView(context) : _form(),
+              child: _allowedRoles.isEmpty ? const NotAllowedView() : _form(),
             ),
           ),
         ),
       ),
-    );
-  }
-
-  Widget _notAllowedView(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: <Widget>[
-        Icon(
-          Icons.lock_outline,
-          size: 56,
-          color: Theme.of(context).colorScheme.primary,
-        ),
-        const SizedBox(height: 16),
-        Text(
-          'You are not allowed to add users.',
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-        ),
-        const SizedBox(height: 20),
-        AppButton(label: 'Back', onPressed: () => context.pop()),
-      ],
     );
   }
 
