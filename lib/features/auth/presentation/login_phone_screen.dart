@@ -28,15 +28,10 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
   }
 
   Future<void> _continue() async {
-    final phone = _phoneController.text.trim();
+    final phone = _phoneController.text;
 
-    if (phone.isEmpty) {
-      _showError('Please enter your phone number.');
-      return;
-    }
-
-    if (phone.length < 10) {
-      _showError('Phone number must be at least 10 digits.');
+    if (phone.length != 10) {
+      _showError('Enter a valid 10 digit phone number');
       return;
     }
 
@@ -126,7 +121,8 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
                     keyboardType: TextInputType.phone,
                     textInputAction: TextInputAction.done,
                     inputFormatters: <TextInputFormatter>[
-                      FilteringTextInputFormatter.allow(RegExp(r'[+\d]')),
+                      FilteringTextInputFormatter.digitsOnly,
+                      LengthLimitingTextInputFormatter(10),
                     ],
                   ),
                   const SizedBox(height: 24),

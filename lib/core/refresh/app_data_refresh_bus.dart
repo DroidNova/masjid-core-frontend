@@ -8,6 +8,10 @@ enum AppDataScope {
   announcements,
   namazTime,
   imamSalary,
+  adminDashboard,
+  adminUsers,
+  adminMasjidRequests,
+  adminMasjids,
 }
 
 class AppDataRefreshBus {
