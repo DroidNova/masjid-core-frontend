@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 import 'package:platform_core_frontend/core/permissions/permission_helper.dart';
+import 'package:platform_core_frontend/core/refresh/app_data_refresh_bus.dart';
 import 'package:platform_core_frontend/core/storage/session_storage.dart';
 import 'package:platform_core_frontend/features/auth/data/auth_repository.dart';
 import 'package:platform_core_frontend/features/auth/data/models/app_user.dart';
@@ -42,13 +44,29 @@ class _CommunityScreenState extends State<CommunityScreen> {
   List<CommunityUserModel> _users = <CommunityUserModel>[];
   String? _errorMessage;
   bool _isLoading = true;
+  bool _hasLoaded = false;
+  Future<void>? _activeLoad;
+  late final ValueNotifier<int> _refreshNotifier;
   AppUser? _currentUser;
 
   @override
   void initState() {
     super.initState();
+    _refreshNotifier =
+        AppDataRefreshBus.instance.notifierFor(AppDataScope.community);
+    _refreshNotifier.addListener(_onRefreshRequested);
     _loadCurrentUser();
     _loadCommunity();
+  }
+
+  @override
+  void dispose() {
+    _refreshNotifier.removeListener(_onRefreshRequested);
+    super.dispose();
+  }
+
+  void _onRefreshRequested() {
+    _loadCommunity(force: true);
   }
 
   Future<void> _loadCurrentUser() async {
@@ -57,7 +75,19 @@ class _CommunityScreenState extends State<CommunityScreen> {
     setState(() => _currentUser = user);
   }
 
-  Future<void> _loadCommunity() async {
+  Future<void> _loadCommunity({bool force = false}) {
+    final activeLoad = _activeLoad;
+    if (activeLoad != null) return activeLoad;
+    if (!force && _hasLoaded) return Future<void>.value();
+
+    _activeLoad = _performLoadCommunity().whenComplete(() {
+      _activeLoad = null;
+    });
+    return _activeLoad!;
+  }
+
+  Future<void> _performLoadCommunity() async {
+    if (!mounted) return;
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -71,30 +101,13 @@ class _CommunityScreenState extends State<CommunityScreen> {
       setState(() {
         _masjid = results[0] as MasjidDetailModel;
         _users = results[1] as List<CommunityUserModel>;
+        _hasLoaded = true;
       });
     } catch (error) {
       if (!mounted) return;
       setState(() => _errorMessage = _cleanError(error));
     } finally {
       if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
-  Future<void> _refreshCommunity() async {
-    try {
-      final results = await Future.wait<Object>([
-        _communityRepository.getMyMasjid(),
-        _communityRepository.getMyMasjidUsers(),
-      ]);
-      if (!mounted) return;
-      setState(() {
-        _masjid = results[0] as MasjidDetailModel;
-        _users = results[1] as List<CommunityUserModel>;
-        _errorMessage = null;
-      });
-    } catch (error) {
-      if (!mounted) return;
-      setState(() => _errorMessage = _cleanError(error));
     }
   }
 
@@ -125,8 +138,6 @@ class _CommunityScreenState extends State<CommunityScreen> {
 
   Future<void> _openAddUser() async {
     await context.push('/community/add-user');
-    await _loadCurrentUser();
-    await _refreshCommunity();
   }
 
   List<String> get _currentUserRoles => _currentUser?.roles ?? const <String>[];
@@ -177,7 +188,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
             ? 'You are not assigned to any masjid yet.'
             : 'Unable to load community details.',
         detail: _isNoMasjidError ? null : _errorMessage,
-        onPressed: _loadCommunity,
+        onPressed: () => _loadCommunity(force: true),
       );
     }
 
@@ -185,13 +196,13 @@ class _CommunityScreenState extends State<CommunityScreen> {
     if (masjid == null) {
       return _CommunityErrorView(
         message: 'Unable to load community details.',
-        onPressed: _loadCommunity,
+        onPressed: () => _loadCommunity(force: true),
       );
     }
 
     return SafeArea(
       child: RefreshIndicator(
-        onRefresh: _refreshCommunity,
+        onRefresh: () => _loadCommunity(force: true),
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.all(16),

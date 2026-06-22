@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 import 'package:platform_core_frontend/core/permissions/permission_helper.dart';
+import 'package:platform_core_frontend/core/refresh/app_data_refresh_bus.dart';
 import 'package:platform_core_frontend/core/storage/session_storage.dart';
 import 'package:platform_core_frontend/features/auth/data/auth_repository.dart';
 import 'package:platform_core_frontend/features/auth/data/models/app_user.dart';
@@ -41,13 +43,29 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
   String _selectedFilter = 'ALL';
   String? _errorMessage;
   bool _isLoading = true;
+  bool _hasLoaded = false;
+  Future<void>? _activeLoad;
+  late final ValueNotifier<int> _refreshNotifier;
   AppUser? _currentUser;
 
   @override
   void initState() {
     super.initState();
+    _refreshNotifier =
+        AppDataRefreshBus.instance.notifierFor(AppDataScope.projects);
+    _refreshNotifier.addListener(_onRefreshRequested);
     _loadCurrentUser();
     _loadProjects();
+  }
+
+  @override
+  void dispose() {
+    _refreshNotifier.removeListener(_onRefreshRequested);
+    super.dispose();
+  }
+
+  void _onRefreshRequested() {
+    _loadProjects(force: true);
   }
 
   Future<void> _loadCurrentUser() async {
@@ -56,7 +74,19 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
     setState(() => _currentUser = user);
   }
 
-  Future<void> _loadProjects() async {
+  Future<void> _loadProjects({bool force = false}) {
+    final activeLoad = _activeLoad;
+    if (activeLoad != null) return activeLoad;
+    if (!force && _hasLoaded) return Future<void>.value();
+
+    _activeLoad = _performLoadProjects().whenComplete(() {
+      _activeLoad = null;
+    });
+    return _activeLoad!;
+  }
+
+  Future<void> _performLoadProjects() async {
+    if (!mounted) return;
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -64,7 +94,10 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
     try {
       final projects = await _projectsRepository.getProjects();
       if (!mounted) return;
-      setState(() => _projects = projects);
+      setState(() {
+        _projects = projects;
+        _hasLoaded = true;
+      });
     } catch (error) {
       if (!mounted) return;
       setState(() => _errorMessage = _cleanError(error));
@@ -73,28 +106,12 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
     }
   }
 
-  Future<void> _refreshProjects() async {
-    try {
-      final projects = await _projectsRepository.getProjects();
-      if (!mounted) return;
-      setState(() {
-        _projects = projects;
-        _errorMessage = null;
-      });
-    } catch (error) {
-      if (!mounted) return;
-      setState(() => _errorMessage = _cleanError(error));
-    }
-  }
-
   Future<void> _openAddProject() async {
     await context.push('/projects/add');
-    if (mounted) await _refreshProjects();
   }
 
   Future<void> _openProject(ProjectModel project) async {
     await context.push('/projects/${project.id}', extra: project);
-    if (mounted) await _refreshProjects();
   }
 
   Future<void> _logout() async {
@@ -141,7 +158,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
             ? 'You are not assigned to any masjid yet.'
             : 'Unable to load projects.',
         detail: _isNoMasjidError ? null : _errorMessage,
-        onPressed: _loadProjects,
+        onPressed: () => _loadProjects(force: true),
       );
     }
 
@@ -152,7 +169,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
 
     return SafeArea(
       child: RefreshIndicator(
-        onRefresh: _refreshProjects,
+        onRefresh: () => _loadProjects(force: true),
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.all(16),

@@ -23,6 +23,7 @@ class _LoginPasswordScreenState extends State<LoginPasswordScreen> {
   late final AuthRepository _authRepository =
       widget._authRepository ?? AuthRepository();
   bool _isLoading = false;
+  bool _obscurePassword = true;
 
   @override
   void dispose() {
@@ -115,8 +116,20 @@ class _LoginPasswordScreenState extends State<LoginPasswordScreen> {
                   AppTextField(
                     controller: _passwordController,
                     label: 'Password',
-                    obscureText: true,
+                    obscureText: _obscurePassword,
                     textInputAction: TextInputAction.done,
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility
+                            : Icons.visibility_off,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
+                    ),
                   ),
                   const SizedBox(height: 24),
                   AppButton(

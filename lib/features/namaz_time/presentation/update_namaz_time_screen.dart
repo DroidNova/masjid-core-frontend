@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:platform_core_frontend/features/dashboard/data/dashboard_repository.dart';
+import 'package:platform_core_frontend/core/storage/session_storage.dart';
 import 'package:platform_core_frontend/features/namaz_time/data/models/namaz_time_model.dart';
 import 'package:platform_core_frontend/features/namaz_time/data/models/update_namaz_time_request.dart';
 import 'package:platform_core_frontend/features/namaz_time/data/namaz_time_repository.dart';
@@ -14,14 +14,14 @@ class UpdateNamazTimeScreen extends StatefulWidget {
     this.masjidId,
     this.initialNamazTime,
     NamazTimeRepository? namazTimeRepository,
-    DashboardRepository? dashboardRepository,
+    SessionStorage? sessionStorage,
   })  : _namazTimeRepository = namazTimeRepository,
-        _dashboardRepository = dashboardRepository;
+        _sessionStorage = sessionStorage;
 
   final String? masjidId;
   final NamazTimeModel? initialNamazTime;
   final NamazTimeRepository? _namazTimeRepository;
-  final DashboardRepository? _dashboardRepository;
+  final SessionStorage? _sessionStorage;
 
   @override
   State<UpdateNamazTimeScreen> createState() => _UpdateNamazTimeScreenState();
@@ -38,8 +38,8 @@ class _UpdateNamazTimeScreenState extends State<UpdateNamazTimeScreen> {
 
   late final NamazTimeRepository _namazTimeRepository =
       widget._namazTimeRepository ?? NamazTimeRepository();
-  late final DashboardRepository _dashboardRepository =
-      widget._dashboardRepository ?? DashboardRepository();
+  late final SessionStorage _sessionStorage =
+      widget._sessionStorage ?? SessionStorage();
 
   String? _masjidId;
   String? _errorMessage;
@@ -100,8 +100,8 @@ class _UpdateNamazTimeScreenState extends State<UpdateNamazTimeScreen> {
     if (widget.masjidId != null && widget.masjidId!.isNotEmpty) {
       return widget.masjidId;
     }
-    final dashboard = await _dashboardRepository.getMyMasjidDashboard();
-    return dashboard.masjid?.id;
+    final user = await _sessionStorage.getUser();
+    return user?.masjidId;
   }
 
   void _fill(NamazTimeModel namazTime) {

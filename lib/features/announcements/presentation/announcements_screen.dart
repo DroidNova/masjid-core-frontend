@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 import 'package:platform_core_frontend/core/permissions/permission_helper.dart';
+import 'package:platform_core_frontend/core/refresh/app_data_refresh_bus.dart';
 import 'package:platform_core_frontend/core/storage/session_storage.dart';
 import 'package:platform_core_frontend/features/announcements/data/announcements_repository.dart';
 import 'package:platform_core_frontend/features/announcements/data/models/announcement_model.dart';
@@ -40,13 +42,29 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
   List<AnnouncementModel> _announcements = <AnnouncementModel>[];
   String? _errorMessage;
   bool _isLoading = true;
+  bool _hasLoaded = false;
+  Future<void>? _activeLoad;
+  late final ValueNotifier<int> _refreshNotifier;
   AppUser? _currentUser;
 
   @override
   void initState() {
     super.initState();
+    _refreshNotifier =
+        AppDataRefreshBus.instance.notifierFor(AppDataScope.announcements);
+    _refreshNotifier.addListener(_onRefreshRequested);
     _loadCurrentUser();
     _loadAnnouncements();
+  }
+
+  @override
+  void dispose() {
+    _refreshNotifier.removeListener(_onRefreshRequested);
+    super.dispose();
+  }
+
+  void _onRefreshRequested() {
+    _loadAnnouncements(force: true);
   }
 
   Future<void> _loadCurrentUser() async {
@@ -55,7 +73,19 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
     setState(() => _currentUser = user);
   }
 
-  Future<void> _loadAnnouncements() async {
+  Future<void> _loadAnnouncements({bool force = false}) {
+    final activeLoad = _activeLoad;
+    if (activeLoad != null) return activeLoad;
+    if (!force && _hasLoaded) return Future<void>.value();
+
+    _activeLoad = _performLoadAnnouncements().whenComplete(() {
+      _activeLoad = null;
+    });
+    return _activeLoad!;
+  }
+
+  Future<void> _performLoadAnnouncements() async {
+    if (!mounted) return;
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -63,7 +93,10 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
     try {
       final announcements = await _announcementsRepository.getAnnouncements();
       if (!mounted) return;
-      setState(() => _announcements = announcements);
+      setState(() {
+        _announcements = announcements;
+        _hasLoaded = true;
+      });
     } catch (error) {
       if (!mounted) return;
       setState(() => _errorMessage = _cleanError(error));
@@ -72,23 +105,8 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
     }
   }
 
-  Future<void> _refreshAnnouncements() async {
-    try {
-      final announcements = await _announcementsRepository.getAnnouncements();
-      if (!mounted) return;
-      setState(() {
-        _announcements = announcements;
-        _errorMessage = null;
-      });
-    } catch (error) {
-      if (!mounted) return;
-      setState(() => _errorMessage = _cleanError(error));
-    }
-  }
-
   Future<void> _openAddAnnouncement() async {
     await context.push('/announcements/add');
-    if (mounted) await _refreshAnnouncements();
   }
 
   Future<void> _openEditAnnouncement(AnnouncementModel announcement) async {
@@ -96,7 +114,6 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
       '/announcements/${announcement.id}/edit',
       extra: announcement,
     );
-    if (mounted) await _refreshAnnouncements();
   }
 
   Future<void> _deleteAnnouncement(AnnouncementModel announcement) async {
@@ -127,7 +144,6 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Announcement deleted successfully.')),
       );
-      await _refreshAnnouncements();
     } catch (error) {
       if (mounted) _showError(_cleanError(error));
     }
@@ -174,7 +190,7 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
             ? 'You are not assigned to any masjid yet.'
             : 'Unable to load announcements.',
         detail: _isNoMasjidError ? null : _errorMessage,
-        onPressed: _loadAnnouncements,
+        onPressed: () => _loadAnnouncements(force: true),
       );
     }
 
@@ -186,7 +202,7 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
       appBar: AppBar(title: const Text('Announcements')),
       body: SafeArea(
         child: RefreshIndicator(
-          onRefresh: _refreshAnnouncements,
+          onRefresh: () => _loadAnnouncements(force: true),
           child: ListView(
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.all(16),
