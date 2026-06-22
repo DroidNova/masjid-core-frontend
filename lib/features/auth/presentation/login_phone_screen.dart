@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:platform_core_frontend/features/auth/data/auth_repository.dart';
 import 'package:platform_core_frontend/shared/widgets/app_button.dart';
@@ -124,6 +125,9 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
                     hint: '9876543210',
                     keyboardType: TextInputType.phone,
                     textInputAction: TextInputAction.done,
+                    inputFormatters: <TextInputFormatter>[
+                      FilteringTextInputFormatter.allow(RegExp(r'[+\d]')),
+                    ],
                   ),
                   const SizedBox(height: 24),
                   AppButton(
