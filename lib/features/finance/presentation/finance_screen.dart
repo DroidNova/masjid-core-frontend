@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 import 'package:platform_core_frontend/core/permissions/permission_helper.dart';
+import 'package:platform_core_frontend/core/refresh/app_data_refresh_bus.dart';
 import 'package:platform_core_frontend/core/storage/session_storage.dart';
 import 'package:platform_core_frontend/features/auth/data/auth_repository.dart';
 import 'package:platform_core_frontend/features/auth/data/models/app_user.dart';
@@ -45,14 +47,30 @@ class _FinanceScreenState extends State<FinanceScreen> {
   List<ExpenseEntryModel> _expenses = <ExpenseEntryModel>[];
   String? _errorMessage;
   bool _isLoading = true;
+  bool _hasLoaded = false;
+  Future<void>? _activeLoad;
+  late final ValueNotifier<int> _refreshNotifier;
   int _selectedTab = 0;
   AppUser? _currentUser;
 
   @override
   void initState() {
     super.initState();
+    _refreshNotifier =
+        AppDataRefreshBus.instance.notifierFor(AppDataScope.finance);
+    _refreshNotifier.addListener(_onRefreshRequested);
     _loadCurrentUser();
     _loadFinanceData();
+  }
+
+  @override
+  void dispose() {
+    _refreshNotifier.removeListener(_onRefreshRequested);
+    super.dispose();
+  }
+
+  void _onRefreshRequested() {
+    _loadFinanceData(force: true);
   }
 
   Future<void> _loadCurrentUser() async {
@@ -61,7 +79,19 @@ class _FinanceScreenState extends State<FinanceScreen> {
     setState(() => _currentUser = user);
   }
 
-  Future<void> _loadFinanceData() async {
+  Future<void> _loadFinanceData({bool force = false}) {
+    final activeLoad = _activeLoad;
+    if (activeLoad != null) return activeLoad;
+    if (!force && _hasLoaded) return Future<void>.value();
+
+    _activeLoad = _performLoadFinanceData().whenComplete(() {
+      _activeLoad = null;
+    });
+    return _activeLoad!;
+  }
+
+  Future<void> _performLoadFinanceData() async {
+    if (!mounted) return;
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -80,6 +110,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
         _summary = results[0] as FinanceSummaryModel;
         _collections = results[1] as List<CollectionEntryModel>;
         _expenses = results[2] as List<ExpenseEntryModel>;
+        _hasLoaded = true;
       });
     } catch (error) {
       if (!mounted) return;
@@ -89,36 +120,12 @@ class _FinanceScreenState extends State<FinanceScreen> {
     }
   }
 
-  Future<void> _refreshFinanceData() async {
-    try {
-      final results = await Future.wait<Object>([
-        _financeRepository.getFinanceSummary(),
-        _financeRepository.getCollections(),
-        _financeRepository.getExpenses(),
-      ]);
-
-      if (!mounted) return;
-
-      setState(() {
-        _summary = results[0] as FinanceSummaryModel;
-        _collections = results[1] as List<CollectionEntryModel>;
-        _expenses = results[2] as List<ExpenseEntryModel>;
-        _errorMessage = null;
-      });
-    } catch (error) {
-      if (!mounted) return;
-      setState(() => _errorMessage = _cleanError(error));
-    }
-  }
-
   Future<void> _openAddCollection() async {
     await context.push('/finance/add-collection');
-    if (mounted) await _refreshFinanceData();
   }
 
   Future<void> _openAddExpense() async {
     await context.push('/finance/add-expense');
-    if (mounted) await _refreshFinanceData();
   }
 
   Future<void> _logout() async {
@@ -161,7 +168,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
             ? 'You are not assigned to any masjid yet.'
             : 'Unable to load finance data.',
         detail: _isNoMasjidError ? null : _errorMessage,
-        onPressed: _loadFinanceData,
+        onPressed: () => _loadFinanceData(force: true),
       );
     }
 
@@ -170,7 +177,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
 
     return SafeArea(
       child: RefreshIndicator(
-        onRefresh: _refreshFinanceData,
+        onRefresh: () => _loadFinanceData(force: true),
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.all(16),

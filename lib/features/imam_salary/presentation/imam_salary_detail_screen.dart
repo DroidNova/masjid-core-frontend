@@ -81,11 +81,10 @@ class _ImamSalaryDetailScreenState extends State<ImamSalaryDetailScreen> {
   }
 
   Future<void> _openEdit(ImamSalaryModel salary) async {
-    final updated = await context.push<bool>(
+    await context.push<bool>(
       '/imam-salaries/${salary.id}/edit',
       extra: salary,
     );
-    if (mounted && updated == true) await _loadSalary();
   }
 
   Future<void> _confirmDelete() async {

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 import 'package:platform_core_frontend/core/permissions/permission_helper.dart';
+import 'package:platform_core_frontend/core/refresh/app_data_refresh_bus.dart';
 import 'package:platform_core_frontend/core/storage/session_storage.dart';
 import 'package:platform_core_frontend/features/auth/data/auth_repository.dart';
 import 'package:platform_core_frontend/features/auth/data/models/app_user.dart';
@@ -44,13 +46,29 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
   DashboardResponse? _dashboard;
   String? _errorMessage;
   bool _isLoading = true;
+  bool _hasLoaded = false;
+  Future<void>? _activeLoad;
+  late final ValueNotifier<int> _refreshNotifier;
   AppUser? _currentUser;
 
   @override
   void initState() {
     super.initState();
+    _refreshNotifier =
+        AppDataRefreshBus.instance.notifierFor(AppDataScope.dashboard);
+    _refreshNotifier.addListener(_onRefreshRequested);
     _loadCurrentUser();
     _loadDashboard();
+  }
+
+  @override
+  void dispose() {
+    _refreshNotifier.removeListener(_onRefreshRequested);
+    super.dispose();
+  }
+
+  void _onRefreshRequested() {
+    _loadDashboard(force: true);
   }
 
   Future<void> _loadCurrentUser() async {
@@ -59,7 +77,19 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
     setState(() => _currentUser = user);
   }
 
-  Future<void> _loadDashboard() async {
+  Future<void> _loadDashboard({bool force = false}) {
+    final activeLoad = _activeLoad;
+    if (activeLoad != null) return activeLoad;
+    if (!force && _hasLoaded) return Future<void>.value();
+
+    _activeLoad = _performLoadDashboard().whenComplete(() {
+      _activeLoad = null;
+    });
+    return _activeLoad!;
+  }
+
+  Future<void> _performLoadDashboard() async {
+    if (!mounted) return;
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -68,26 +98,15 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
     try {
       final dashboard = await _dashboardRepository.getMyMasjidDashboard();
       if (!mounted) return;
-      setState(() => _dashboard = dashboard);
+      setState(() {
+        _dashboard = dashboard;
+        _hasLoaded = true;
+      });
     } catch (error) {
       if (!mounted) return;
       setState(() => _errorMessage = _cleanError(error));
     } finally {
       if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
-  Future<void> _refreshDashboard() async {
-    try {
-      final dashboard = await _dashboardRepository.getMyMasjidDashboard();
-      if (!mounted) return;
-      setState(() {
-        _dashboard = dashboard;
-        _errorMessage = null;
-      });
-    } catch (error) {
-      if (!mounted) return;
-      setState(() => _errorMessage = _cleanError(error));
     }
   }
 
@@ -121,7 +140,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
             : 'Unable to load dashboard',
         detail: _isNoMasjidError ? null : _errorMessage,
         primaryButtonLabel: _isNoMasjidError ? 'Logout / Back to Login' : 'Retry',
-        onPrimaryPressed: _isNoMasjidError ? _logout : _loadDashboard,
+        onPrimaryPressed: _isNoMasjidError ? _logout : () => _loadDashboard(force: true),
       );
     }
 
@@ -134,13 +153,13 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
     if (dashboard == null) {
       return _DashboardErrorView(
         message: 'Unable to load dashboard',
-        onPrimaryPressed: _loadDashboard,
+        onPrimaryPressed: () => _loadDashboard(force: true),
       );
     }
 
     return SafeArea(
       child: RefreshIndicator(
-        onRefresh: _refreshDashboard,
+        onRefresh: () => _loadDashboard(force: true),
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.all(16),
@@ -169,7 +188,6 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                             'masjidId': dashboard.masjid?.id,
                           },
                         );
-                        if (mounted) await _loadDashboard();
                       },
                     ),
                   ],

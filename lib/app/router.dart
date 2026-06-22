@@ -19,6 +19,10 @@ import 'package:platform_core_frontend/features/auth/presentation/login_password
 import 'package:platform_core_frontend/features/auth/presentation/login_phone_screen.dart';
 import 'package:platform_core_frontend/features/auth/presentation/otp_screen.dart';
 import 'package:platform_core_frontend/features/community/presentation/add_community_user_screen.dart';
+import 'package:platform_core_frontend/features/projects/presentation/projects_screen.dart';
+import 'package:platform_core_frontend/features/finance/presentation/finance_screen.dart';
+import 'package:platform_core_frontend/features/dashboard/presentation/home_dashboard_screen.dart';
+import 'package:platform_core_frontend/features/community/presentation/community_screen.dart';
 import 'package:platform_core_frontend/features/finance/presentation/add_collection_screen.dart';
 import 'package:platform_core_frontend/features/finance/presentation/add_expense_screen.dart';
 import 'package:platform_core_frontend/features/imam_salary/models/imam_salary_model.dart';
@@ -250,7 +254,32 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: '/main',
-      builder: (context, state) => const MainShellScreen(),
+      redirect: (context, state) async {
+        final user = await SessionStorage().getUser();
+        if (PermissionHelper.isSuperAdmin(user)) return '/super-admin';
+        return '/main/home';
+      },
+    ),
+    ShellRoute(
+      builder: (context, state, child) => MainShellScreen(child: child),
+      routes: <RouteBase>[
+        GoRoute(
+          path: '/main/home',
+          builder: (context, state) => const HomeDashboardScreen(),
+        ),
+        GoRoute(
+          path: '/main/finance',
+          builder: (context, state) => const FinanceScreen(),
+        ),
+        GoRoute(
+          path: '/main/projects',
+          builder: (context, state) => const ProjectsScreen(),
+        ),
+        GoRoute(
+          path: '/main/community',
+          builder: (context, state) => const CommunityScreen(),
+        ),
+      ],
     ),
   ],
 );

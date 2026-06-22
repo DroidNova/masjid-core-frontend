@@ -80,7 +80,6 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
     final project = _project;
     if (project == null) return;
     await context.push('/projects/${project.id}/edit', extra: project);
-    if (mounted) await _loadProject();
   }
 
   Future<void> _deleteProject() async {
